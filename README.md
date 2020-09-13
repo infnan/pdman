@@ -1,4 +1,4 @@
-# PDMan模型定义工具
+# PDMan模型定义工具使用手册
 
 ## 启动
 
@@ -8,11 +8,11 @@
 
 ### 如何开始
 
- 你可以根据下面的命令在本地搭建一个pdman项目:
+ 你可以根据下面的命令在本地搭建一个PDMan项目:
  
 ```bash
-$ git clone https://gitee.com/robergroup/pdman
-$ cd pdman
+$ git clone http://192.168.60.43:18001/rdc/PDMan
+$ cd PDMan
 $ npm install                   # 安装项目依赖
 $ npm run start                # 编译代码并且启动electron界面
 ```

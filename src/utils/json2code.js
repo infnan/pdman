@@ -296,7 +296,7 @@ const generateUpdateSql = (dataSource, changesData = [], code, oldDataSource) =>
           separator
         });
       }
-    }).join(`${separator}\n`);
+    }).join('\n');
 
   templateResult += changes
     .filter(c => c.type === 'index')
@@ -337,7 +337,7 @@ const generateUpdateSql = (dataSource, changesData = [], code, oldDataSource) =>
         separator
       });
     })
-    .join(`${separator}\n`);
+    .join('\n');
 
   // 3.生成实体的sql
   templateResult += changes
@@ -371,8 +371,8 @@ const generateUpdateSql = (dataSource, changesData = [], code, oldDataSource) =>
           separator
         });
       }
-    }).join(`${separator}\n`);
-  return templateResult;
+    }).join('\n');
+  return templateResult.endsWith(separator) ? templateResult : templateResult + separator;
 };
 
 const getCodeByRebuildTableTemplate = (dataSource, changes, code, oldDataSource) => {
@@ -729,16 +729,78 @@ export const getAllDataSQL = (dataSource, code) => {
         index: i,
         separator
       })}`;
-    }).join(`${separator}\n`);
+    }).join('\n');
     return `${getTemplateString(getTemplate('deleteTableTemplate'), {
       module: { name: e.name },
       entity: e,
       separator
-    })}${separator}\n${getTemplateString(getTemplate('createTableTemplate'), {
+    })}\n${getTemplateString(getTemplate('createTableTemplate'), {
       module: { name: e.name },
       entity: e,
       separator
-    })}${indexData ? `${separator}\n${indexData}`: ''}`
-  }).join(`${separator}\n`);
+    })}${indexData}`
+  }).join('\n');
+  return sqlString.endsWith(separator) ? sqlString : sqlString + separator;
+};
+
+export const getAllDataSQLByFilter = (dataSource, code, filter = []) => {
+  // 获取全量脚本（删表，建表，建索引，表注释）
+  const datatype = _object.get(dataSource, 'dataTypeDomains.datatype', []);
+  const database = _object.get(dataSource, 'dataTypeDomains.database', [])
+    .filter(db => db.code === code)[0];
+  const getTemplate = (templateShow) => {
+    return `${(database && database[templateShow]) || ''}`;
+  };
+  const separator = _object.get(dataSource, 'profile.sqlConfig', ';');
+  let sqlString = '';
+  // 1.获取所有的表
+  const tempEntities = getAllTable(dataSource, 'name').map((entity) => {
+    return {
+      ...entity,
+      fields: (entity.fields || []).map(field => {
+        return {
+          ...field,
+          type: getFieldType(datatype, field.type, code),
+        }
+      })
+    }
+  });
+  sqlString += tempEntities.map(e => {
+    // 1.1.删除表
+    // 1.2.新建表
+    // 1.3.新建索引
+    // 表注释
+
+    // 循环创建该表下所有的索引
+    let tempData = '';
+    let allData = {};
+    allData.createIndex = (e.indexs || []).map(i => {
+      return `${getTemplateString(getTemplate('createIndexTemplate'), {
+        module: { name: e.name },
+        entity: e,
+        index: i,
+        separator
+      })}`;
+    }).join('\n');
+    allData.deleteTable = `${getTemplateString(getTemplate('deleteTableTemplate'), {
+      module: {name: e.name},
+      entity: e,
+      separator
+    })}`;
+    allData.createTable = `${getTemplateString(getTemplate('createTableTemplate'), {
+      module: { name: e.name },
+      entity: e,
+      separator
+    })}`;
+    allData.updateComment = `${getTemplateString(getTemplate('updateTableComment'), {
+      module: {name: e.name},
+      entity: e,
+      separator
+    })}`;
+    filter.forEach(f => {
+      tempData += allData[f] ? `${allData[f]}\n` : '';
+    });
+    return tempData;
+  }).join('');
   return sqlString;
 };

@@ -3,12 +3,17 @@ import ReactDom from 'react-dom';
 import _object from 'lodash/object';
 import * as Com from '../components';
 import defaultData from './defaultData';
+import JavaHomeConfig from './JavaHomeConfig';
+import SQLConfig from './SQLConfig';
+import WORDConfig from './WORDConfig';
+//import Register from './Register';
 
 import './style/setting.less';
 import { uuid } from '../utils/uuid';
 import { moveArrayPositionByFuc, moveArrayPosition } from '../utils/array';
+import DataTypeHelp from './container/datatype/help';
 
-const { Modal, openModal, TextArea, Select } = Com;
+const { Modal, openModal, TextArea, Select, openMask } = Com;
 const clipboard = require('electron').clipboard;
 
 export default class Setting extends React.Component{
@@ -22,6 +27,10 @@ export default class Setting extends React.Component{
       defaultFieldsType: _object.get(props.dataSource, 'profile.defaultFieldsType', '1'),
     };
     this.inputInstance = [];
+    this.javaConfig = _object.get(props.dataSource, 'profile.javaConfig', {});
+    this.sqlConfig = _object.get(props.dataSource, 'profile.sqlConfig', ';');
+    this.wordTemplateConfig = _object.get(props.dataSource, 'profile.wordTemplateConfig', '');
+    this.dbs = _object.get(props.dataSource, 'profile.dbs', []);
   }
   componentDidMount(){
     this.dom = ReactDom.findDOMNode(this.instance);
@@ -39,6 +48,10 @@ export default class Setting extends React.Component{
       profile: {
         defaultFields: fields.map(field => _object.omit(field, ['key'])),
         defaultFieldsType,
+        javaConfig: this.javaConfig,
+        sqlConfig: this.sqlConfig,
+        dbs: this.dbs,
+        wordTemplateConfig: this.wordTemplateConfig,
       }
     };
   };
@@ -374,6 +387,15 @@ export default class Setting extends React.Component{
       }),
     });
   };
+  _javaHomeChange = (data) => {
+    this.javaConfig = data;
+  };
+  _sqlSeparatorChange = (data) => {
+    this.sqlConfig = data;
+  };
+  _wordTemplateChange = (data) => {
+    this.wordTemplateConfig = data;
+  };
   _getOptions = (dataTypes, type) => {
     const data = type === 'type' ? dataTypes : [
       {code: 'Text', name: '文字'},
@@ -402,9 +424,12 @@ export default class Setting extends React.Component{
           </option>
         ));
   };
+  _showCreateType = () => {
+    openMask(<DataTypeHelp/>);
+  };
   render(){
     const { height, selectedTrs, fields, defaultFieldsType } = this.state;
-    const { prefix = 'pdman', columnOrder, dataSource, project } = this.props;
+    const { prefix = 'pdman', columnOrder, dataSource, project, register, updateRegister } = this.props;
     const dataTypes = _object.get(dataSource, 'dataTypeDomains.datatype', []);
     return (<div className={`${prefix}-data-table-content`} ref={instance => this.instance = instance}>
       <div className={`${prefix}-data-table-content-tab`}>
@@ -421,6 +446,14 @@ export default class Setting extends React.Component{
           onClick={() => this._tabClick('SQL')}
           className={`${prefix}-data-table-content-tab${this.state.tabShow === 'SQL' ? '-selected' : '-unselected'}`}
         >SQL分隔符配置</div>
+        <div
+          onClick={() => this._tabClick('word')}
+          className={`${prefix}-data-table-content-tab${this.state.tabShow === 'word' ? '-selected' : '-unselected'}`}
+        >WORD模板配置</div>
+        {/*<div*/}
+          {/*onClick={() => this._tabClick('register')}*/}
+          {/*className={`${prefix}-data-table-content-tab${this.state.tabShow === 'register' ? '-selected' : '-unselected'}`}*/}
+        {/*>注册激活</div>*/}
       </div>
       <div className={`${prefix}-data-tab-content`}>
         <div style={{ width: '100%', display: this.state.tabShow === 'fields' ? '' : 'none' }}>
@@ -479,6 +512,12 @@ export default class Setting extends React.Component{
                       <div>
                         <div>
                           {column.value}
+                          <Com.Icon
+                            title='创建新的数据类型'
+                            onClick={this._showCreateType}
+                            type='fa-question-circle-o'
+                            style={{display: column.code === 'type' ? '' : 'none', color: 'green'}}
+                          />
                           {
                             column.code !== 'relationNoShow' &&
                             <Com.Icon
@@ -558,6 +597,18 @@ export default class Setting extends React.Component{
             </table>
           </div>
         </div>
+        <div style={{ width: '100%', display: this.state.tabShow === 'java' ? '' : 'none' }}>
+          <JavaHomeConfig onChange={this._javaHomeChange} data={this.javaConfig} project={project}/>
+        </div>
+        <div style={{ width: '100%', display: this.state.tabShow === 'SQL' ? '' : 'none' }}>
+          <SQLConfig onChange={this._sqlSeparatorChange} data={this.sqlConfig}/>
+        </div>
+        <div style={{ width: '100%', display: this.state.tabShow === 'word' ? '' : 'none' }}>
+          <WORDConfig onChange={this._wordTemplateChange} data={this.wordTemplateConfig}/>
+        </div>
+        {/*<div style={{ width: '100%', display: this.state.tabShow === 'register' ? '' : 'none' }}>*/}
+          {/*<Register dataSource={this.props.dataSource} register={register} updateRegister={updateRegister}/>*/}
+        {/*</div>*/}
       </div>
     </div>);
   }

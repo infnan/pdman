@@ -2,8 +2,14 @@ import React from 'react';
 import ReactDom from 'react-dom';
 import _object from 'lodash/object';
 import electron from 'electron';
-import {Icon, Tree, Context, Tab, Modal, Message, openModal, Input} from '../components';
+import {Icon, Tree, Context, Tab, Modal, Message, openModal, Button, Input} from '../components';
+import { ensureDirectoryExistence } from '../utils/json';
 import { addOnResize } from '../../src/utils/listener';
+import { generate } from '../../src/utils/markdown';
+import { generateByJar } from '../../src/utils/office';
+//import { generatepdf } from '../../src/utils/generatepdf';
+import { generateHtml } from '../../src/utils/generatehtml';
+import { saveImage } from '../../src/utils/relation2file';
 import { upgrade } from '../../src/utils/basedataupgrade';
 import { moveArrayPosition } from '../../src/utils/array';
 import Module from './container/module';
@@ -11,15 +17,20 @@ import Table from './container/table';
 import DataType from './container/datatype';
 import Database from './container/database';
 import Relation from './container/relation';
+import DatabaseVersion from './DatabaseVersion';
+import ExportSQL from './ExportSQL';
 import ExportImg from './ExportImg';
+import ReadDB from './container/plugin/dbreverseparse/ReadDB';
 import MultipleUtils from './container/multipleopt/MultipleUtils';
+
 
 import Setting from './Setting';
 
 import './style/index.less';
+import JDBCConfig from './JDBCConfig';
 
-const { ipcRenderer } = electron;
-const { dialog } = electron.remote;
+const { ipcRenderer, remote } = electron;
+const { dialog } = remote;
 const moduleUtils = Module.Utils;
 const tableUtils = Table.Utils;
 const DataTypeUtils = DataType.DataTypeUtils;
@@ -217,15 +228,97 @@ export default class App extends React.Component {
       });
     });
   };
-  _saveAs = () => {
+  _saveAs = (status) => {
     const { saveProject, dataSource } = this.props;
     this._saveAll(() => {
-      saveProject('', dataSource);
+      let tempDataSource = {...dataSource};
+      if (status === 'filterDBS') {
+        // 去除数据库信息
+        tempDataSource = {
+          ...tempDataSource,
+          profile: {
+            ...(tempDataSource.profile || {}),
+            dbs: _object.get(tempDataSource, 'profile.dbs', []).map(d => {
+              return {
+                ...d,
+                properties: {
+                  url: '******',
+                  username: '******',
+                  password: '******',
+                },
+              }
+            }),
+          },
+        };
+      }
+      saveProject('', tempDataSource);
+    });
+  };
+  _updateDBs = (tempDBs, callback) => {
+    const { project, dataSource, saveProject } = this.props;
+    saveProject(`${project}.pdman.json`, {
+      ...dataSource,
+      profile: {
+        ...(dataSource.profile || {}),
+        dbs: tempDBs,
+      },
+    }, () => {
+      Message.success({title: '数据库连接信息已经成功保存！'});
+      callback && callback();
+    });
+  };
+  _getJavaConfig = () => {
+    const { dataSource } = this.props;
+    const dataSourceConfig = _object.get(dataSource, 'profile.javaConfig', {});
+    if (!dataSourceConfig.JAVA_HOME) {
+      dataSourceConfig.JAVA_HOME = process.env.JAVA_HOME || process.env.JER_HOME || '';
+    }
+    return dataSourceConfig;
+  };
+  _JDBCConfig = () => {
+    const { project, dataSource } = this.props;
+    let tempDBs = _object.get(dataSource, 'profile.dbs', []);
+    const dbChange = (db) => {
+      tempDBs = db;
+    };
+    openModal(<JDBCConfig
+      onChange={dbChange}
+      data={tempDBs}
+      getJavaConfig={this._getJavaConfig}
+      project={project}
+      dataSource={dataSource}
+    />, {
+      title: '数据库连接配置',
+      onOk: (m) => {
+        const currentDB = tempDBs.filter(d => d.defaultDB)[0];
+        if (!currentDB) {
+          Modal.confirm({
+            title: '提示',
+            message: '未选择默认数据库，是否继续？',
+            onOk: (modal) => {
+              modal && modal.close();
+              this._updateDBs(tempDBs, () => {
+                m && m.close();
+                modal && modal.close();
+              });
+            }});
+        } else {
+          this._updateDBs(tempDBs, () => {
+            m && m.close();
+          });
+        }
+      },
     });
   };
   _setting = () => {
-    const { columnOrder, dataSource, project } = this.props;
-    openModal(<Setting columnOrder={columnOrder} dataSource={dataSource} project={`${project}.pdman.json`}/>, {
+    const { columnOrder, dataSource, project, register, updateRegister } = this.props;
+    openModal(<Setting
+      columnOrder={columnOrder}
+      dataSource={dataSource}
+      project={`${project}.pdman.json`}
+      register={register}
+      updateRegister={updateRegister}
+    />, {
       title: '配置默认数据',
       onOk: (modal, com) => {
         const { saveProject } = this.props;
@@ -259,6 +352,327 @@ export default class App extends React.Component {
     const tempItem = item.replace(/\\/g, '/');
     const tempArray = tempItem.split('/');
     return tempArray[tempArray.length - 1];
+  };
+  _showExportMessage = (path) => {
+    let modal = null;
+    const { dataSource } = this.props;
+    const allTable = (dataSource.modules || []).reduce((a, b) => {
+      return a.concat((b.entities || []).map(entity => entity.title));
+    }, []);
+    if (allTable.length > 50) {
+      modal = Modal.success({
+        title: '导出提示',
+        message: `当前导出的数据表较多，
+        共【${allTable.length}】张表，请耐心等待！
+        文档将导出到目录【${path}】，导出结束后弹窗将自动关闭！`,
+        footer: [],
+      })
+    }
+    return modal;
+  };
+  _exportFile = (type, btn) => {
+    const { dataSource, columnOrder, writeFile, openDir, project, projectDemo } = this.props;
+    if (type === 'Markdown') {
+      // 先生成文件
+      // 选择目录
+      openDir((dir) => {
+        // 保存图片
+        const modal = this._showExportMessage(dir);
+        btn && btn.setLoading(true);
+        const imagePaths = {};
+        const projectName = projectDemo || this._getProjectName(project);
+        saveImage(dataSource, columnOrder, writeFile, (images) => {
+          Promise.all(Object.keys(images).map(mo => {
+            const base64Data = images[mo].replace(/^data:image\/\w+;base64,/, "");
+            const dataBuffer = Buffer.from(base64Data, 'base64');
+            return new Promise((res) => {
+              // 判断图片目录是否存在
+              ensureDirectoryExistence(`${dir}/${projectName}_files/`);
+              writeFile(`${dir}/${projectName}_files/${mo}.png`, dataBuffer).then(() => {
+                imagePaths[mo] = `${mo}.png`;
+                res();
+              });
+            });
+          })).then(() => {
+            // 图片保存成功
+            generate(dataSource, imagePaths, projectName, (dataSource) => {
+              // 将数据保存到文件
+              writeFile(`${dir}/${projectName}.md`, dataSource).then(() => {
+                // md保存成功
+                modal && modal.close();
+                btn && btn.setLoading(false);
+                Modal.success({
+                  title: `${type}导出成功！`,
+                  message: `文件存储目录：[${dir}]`
+                });
+              });
+            });
+          });
+        }, (err) => {
+          modal && modal.close();
+          btn && btn.setLoading(false);
+          Modal.error({
+            title: `${type}导出失败!请重试！`,
+            message: `出错原因：${err.message}`,
+          });
+        });
+      });
+    } else if (type === 'Word' || type === 'PDF') {
+      const { project, projectDemo } = this.props;
+      if (!project && projectDemo) {
+        Modal.error({
+          title: '导出失败！',
+          message: `当前项目为演示项目${projectDemo}，无法直接导出${type},请先进行保存操作！`
+        })
+      } else {
+        const postfix = type === 'Word' ? 'doc' : 'pdf';
+        openDir((dir) => {
+          // 保存图片
+          const modal = this._showExportMessage(dir);
+          btn && btn.setLoading(true);
+          const projectName = projectDemo || this._getProjectName(project);
+          saveImage(dataSource, columnOrder, writeFile, (images) => {
+            const imagesPath = `${dir}/${projectName}_files/`;
+            Promise.all(Object.keys(images).map(mo => {
+              const base64Data = images[mo].replace(/^data:image\/\w+;base64,/, "");
+              const dataBuffer = Buffer.from(base64Data, 'base64');
+              return new Promise((res) => {
+                // 判断图片目录是否存在
+                ensureDirectoryExistence(imagesPath);
+                writeFile(`${imagesPath}${mo}.png`, dataBuffer).then(() => {
+                  res();
+                });
+              });
+            })).then(() => {
+              // 图片保存成功
+              const defaultPath = ipcRenderer.sendSync('wordPath');
+              const templatePath = _object.get(dataSource, 'profile.wordTemplateConfig') || defaultPath;
+              generateByJar(dataSource, {
+                pdmanfile: `${project}.pdman.json`,
+                doctpl: templatePath,
+                imgdir: imagesPath,
+                imgext: '.png',
+                out: `${dir}/${projectName}.${postfix}`,
+              }, (error, stdout, stderr) => {
+                const result = (stdout || stderr);
+                let tempResult = '';
+                try {
+                  tempResult = JSON.parse(result);
+                } catch (e) {
+                  tempResult = result;
+                }
+                btn && btn.setLoading(false);
+                modal && modal.close();
+                if (tempResult.status !== 'SUCCESS') {
+                  Modal.error({
+                    title: `${type}导出失败!请重试！`,
+                    message: `出错原因：${tempResult.body || tempResult}，可前往\${user.home}/logs/pdman目录查看出错日志`,
+                  });
+                } else {
+                  Modal.success({
+                    title: `${type}导出成功！`,
+                    message: `文件存储目录：[${dir}]`
+                  });
+                }
+              }, 'gendocx');
+            });
+          }, (err) => {
+            modal && modal.close();
+            btn && btn.setLoading(false);
+            Modal.error({
+              title: `${type}导出失败!请重试！`,
+              message: `出错原因：${err.message}`,
+            });
+          });
+        });
+      }
+    } else if (type === 'Html') {
+      openDir((dir) => {
+        // 保存图片
+        const modal = this._showExportMessage(dir);
+        btn && btn.setLoading(true);
+        const projectName = projectDemo || this._getProjectName(project);
+        saveImage(dataSource, columnOrder, writeFile, (images) => {
+          generateHtml(dataSource, images, projectName, (dataSource) => {
+            writeFile(`${dir}/${projectName}.html`, dataSource).then(() => {
+              modal && modal.close();
+              btn && btn.setLoading(false);
+              Message.success({title: `html导出成功！导出目录：[${dir}]`});
+            }).catch(() => {
+              modal && modal.close();
+              Message.success({title: 'html导出失败！'});
+              btn && btn.setLoading(false);
+            });
+          });
+        }, (err) => {
+          modal && modal.close();
+          btn && btn.setLoading(false);
+          Modal.error({
+            title: `${type}导出失败!请重试！`,
+            message: `出错原因：${err.message}`,
+          });
+        });
+      });
+    } else if (type === 'SQL') {
+      const database = _object.get(dataSource, 'dataTypeDomains.database', []);
+      const defaultDb = (database.filter(db => db.defaultDatabase)[0] || {}).code;
+      let modal = null;
+      const onOk = () => {
+        const exportConfig = modal.com.getValue();
+        const value = exportConfig.value;
+        if (value.length === 0) {
+          Modal.error({title: '导出失败', message: '请选择导出的内容'})
+        } else {
+          dialog.showSaveDialog({
+            title: '保存SQL文件',
+            filters: [
+              { name: 'PDMan', extensions: ['sql'] },
+            ],
+          }, (file) => {
+            if (file) {
+              const data = modal.com.getData();
+              writeFile(file, data).then(() => {
+                //btn.setLoading(false);
+                Message.success({title: `SQL文件导出成功！导出路径：[${file}]`});
+                modal && modal.close();
+              }).catch(() => {
+                Message.success({title: 'SQL文件导出失败！'});
+                //btn.setLoading(false);
+              });
+            }
+          });
+        }
+      };
+      const onCancel = () => {
+        modal && modal.close();
+      };
+      modal = openModal(<ExportSQL
+        defaultDb={defaultDb}
+        database={database}
+        dataSource={dataSource}
+        exportSQL={onOk}
+        project={project}
+      />, {
+        title: 'SQL导出配置',
+        footer: [
+          //<Button key="ok" onClick={onOk} type="primary" style={{marginTop: 10}}>保存</Button>,
+          <Button key="cancel" onClick={onCancel} style={{marginLeft: 10, marginTop: 10}}>关闭</Button>
+        ],
+      });
+    }
+  };
+  _export = () => {
+    // 打开弹窗，选择导出html或者word
+    openModal(<div style={{textAlign: 'center', padding: 10}}>
+      <Button icon='HTML' onClick={(btn) => this._exportFile('Html', btn)}>导出HTML</Button>
+      <Button icon='wordfile1' style={{marginLeft: 40}} onClick={(btn) => this._exportFile('Word', btn)}>导出WORD</Button>
+      {/*<Button icon='pdffile1' style={{marginLeft: 40}} onClick={(btn) => this._exportFile('PDF', btn)}>导出PDF</Button>*/}
+      <Button icon='file1' style={{marginLeft: 40}} onClick={(btn) => this._exportFile('Markdown', btn)}>导出MARKDOWN</Button>
+    </div>, {
+      title: '文件导出'
+    })
+  };
+  _exportSQL = () => {
+    this._exportFile('SQL');
+  };
+  _readPDMfile = () => {
+    Message.error({title: '此功能正在玩命开发中，敬请期待...'});
+  };
+  _readDB = () => {
+    let modal = null;
+    const onClickCancel = () => {
+      modal && modal.close();
+    };
+    const success = (keys, data) => {
+      if (keys.length > 0) {
+        const { project, saveProject, dataSource } = this.props;
+        const dbType = _object.get(data, 'dbType', 'MYSQL');
+        const module = _object.get(data, 'module', {});
+        const datatypeObj = _object.get(data, 'dataTypeMap', {});
+        let currentDataTypes = _object.get(dataSource, 'dataTypeDomains.datatype', []);
+        const database = _object.get(dataSource, 'dataTypeDomains.database', []);
+        if (!database.some(d => d.code === dbType)) {
+          database.push({
+            code: dbType
+          });
+        }
+        const currentDataTypeCodes = currentDataTypes.map(t => t.code);
+        const dataTypes = Object.keys(datatypeObj)
+          .map(d => ({
+            name: datatypeObj[d].name,
+            code: datatypeObj[d].code,
+            apply: {
+              [dbType]: {
+                type: datatypeObj[d].type
+              }
+            }
+          })).filter(d => !currentDataTypeCodes.includes(d.code));
+        currentDataTypes = currentDataTypes.map(c => {
+          if (datatypeObj[c.code]) {
+            return {
+              ...c,
+              apply: {
+                ...(c.apply || {}),
+                [dbType]: {
+                  type: datatypeObj[c.code].type
+                }
+              }
+            }
+          }
+          return c;
+        });
+        let tempKeys = [...keys];
+        modal && modal.close();
+        let tempData = {...dataSource};
+        // 1.循环所有已知的数据表
+        let modules = (tempData.modules || []).map(m => ({
+          ...m,
+          entities: (m.entities || []).map(e => {
+            // 执行覆盖操作
+            const dbEntity = keys.filter(k => k.title === e.title)[0];
+            if (dbEntity) {
+              tempKeys = tempKeys.filter(t => t.title !== dbEntity.title);
+            }
+            return dbEntity || e;
+          })
+        }));
+        if (modules.map(m => m.name).includes(module.code)){
+          // 如果该模块已经存在了
+          modules = modules.map(m => {
+            if (m.name === module.code) {
+              return {
+                ...m,
+                entities: (m.entities || []).concat(tempKeys),
+              };
+            }
+            return m;
+          })
+        } else {
+          modules.push({
+            name: module.code,
+            chnname: module.name,
+            entities: tempKeys
+          });
+        }
+        tempData = {
+          ...tempData,
+          modules,
+          dataTypeDomains: {
+            ...(dataSource.dataTypeDomains || {}),
+            datatype: currentDataTypes.concat(dataTypes),
+            database,
+          },
+        };
+        // 2.将剩余的数据表放置于新模块
+        saveProject(`${project}.pdman.json`, tempData, () => {
+          Message.success({title: '操作成功！'})
+        });
+      }
+    };
+    modal = openModal(<ReadDB {...this.props} success={success}/>, {
+      title: '解析已有数据库',
+      footer: [<Button key="cancel" onClick={onClickCancel}>关闭</Button>]
+    })
   };
   _saveAll = (callBack) => {
     const { project, saveProject, dataSource } = this.props;
@@ -298,11 +712,6 @@ export default class App extends React.Component {
   _menuClick = (tools) => {
     if (tools === "openDev") {
       ipcRenderer.sendSync('headerType', 'openDev');
-    } else if(tools === "plug"){
-      Modal.error({
-        title: '该功能暂不开放',
-        message: '插件功能因为引用了第三方商业软件，该功能暂不开放，如需使用请联系我们！'
-      })
     } else {
       this.setState({
         tools,
@@ -1151,16 +1560,20 @@ export default class App extends React.Component {
     return (
       <div style={{
         width: '100%',
-        //height: 'calc(100% - 20px)',
+        height: 'calc(100% - 36px)',
         flexGrow: 1,
         overflow: 'hidden',
       }}>
         <div className='pdman-home-header'>
-          <div className='pdman-home-header-save' onClick={() => this._saveAll()}>
+          <div
+            className='pdman-home-header-save'
+            style={{display: tools === 'dbversion' ? 'none' : ''}}
+            onClick={() => this._saveAll()}
+          >
             <span><Icon type="save"/></span>
             <span>保存</span>
           </div>
-          <div className='pdman-home-header-menu'>
+          <div className='pdman-home-header-menu' style={{paddingLeft: tools === 'dbversion' ? '60px' : '0'}}>
             <header>
               <div className="options-wrapper">
                 <div>
@@ -1186,6 +1599,13 @@ export default class App extends React.Component {
                       onClick={() =>this._menuClick('plug')}
                     >
                       <span><u>模</u>型</span>
+                    </li>
+                    <li
+                      className={`other-options-menu-tools ${tools === 'dbversion' ?
+                        'menu-tools-edit-active' : 'tools-content-enable-click'}`}
+                      onClick={() =>this._menuClick('dbversion')}
+                    >
+                      <span><u>模</u>型版本</span>
                     </li>
                   </ul>
                   <Icon
@@ -1239,6 +1659,12 @@ export default class App extends React.Component {
                       onClick={() => this._setting()}
                     >
                       <Icon type='setting' style={{marginRight: 5}}/>设置
+                    </div>
+                    <div
+                      className='tools-content-clickeable'
+                      onClick={() => this._JDBCConfig()}
+                    >
+                      <Icon type='fa-link' style={{marginRight: 5}}/>数据库连接
                     </div>
                   </div>
                   <div className='tools-content-group-name'>
@@ -1314,6 +1740,46 @@ export default class App extends React.Component {
                   </div>
                   <div className='tools-content-group-name'>
                     搜索
+                  </div>
+                </div>
+              </div>
+              <div className="tools-content-tab" style={{display: tools === 'plug' ? '' : 'none'}}>
+                <div className='tools-content-group'>
+                  <div className='tools-content-group-content'>
+                    <div
+                      className='tools-content-clickeable'
+                      onClick={() => this._readDB()}
+                    ><Icon type="fa-hand-lizard-o"/>数据库逆向解析</div>
+                    {/*<div
+                      className='tools-content-clickeable'
+                      onClick={() => this._readPDMfile()}
+                    ><Icon type="fa-file" />解析PDM文件</div>
+                    <div
+                      className='tools-content-clickeable'
+                      onClick={() => this._readPDMfile()}
+                    ><Icon type="fa-file" />解析ERWin文件</div>*/}
+                  </div>
+                  <div className='tools-content-group-name'>
+                    解析导入
+                  </div>
+                </div>
+                <div className='tools-content-group'>
+                  <div className='tools-content-group-content'>
+                    <div
+                      className='tools-content-clickeable'
+                      onClick={() => this._export()}
+                    ><Icon type="export"/>导出文档</div>
+                    <div
+                      className='tools-content-clickeable'
+                      onClick={() => this._exportSQL()}
+                    ><Icon type="fa-database"/>导出DDL脚本</div>
+                    <div
+                      className='tools-content-clickeable'
+                      onClick={() => this._saveAs('filterDBS')}
+                    ><Icon type="file1"/>导出JSON</div>
+                  </div>
+                  <div className='tools-content-group-name'>
+                    导出
                   </div>
                 </div>
               </div>
@@ -1481,6 +1947,9 @@ export default class App extends React.Component {
             }
           </div>
         </div>
+        {
+          tools === 'dbversion' ? <DatabaseVersion project={project} dataSource={dataSource} saveProject={saveProject}/> : ''
+        }
       </div>
     );
   }

@@ -4,7 +4,7 @@ import {Button, Modal} from '../components';
 
 import './style/javHome.less';
 
-const { spawn, execFile } = require('child_process');
+const { execFile } = require('child_process');
 
 const { ipcRenderer } = electron;
 
@@ -16,7 +16,7 @@ export default class JavaHomeConfig extends React.Component {
     this.state = {
       data: {
         JAVA_HOME: props.data.JAVA_HOME || process.env.JAVA_HOME || process.env.JER_HOME || '',
-        DB_CONNECTOR: props.data.DB_CONNECTOR || '',
+        DB_DRIVE: props.data.DB_DRIVE || [],
       },
     };
   }
@@ -42,22 +42,8 @@ export default class JavaHomeConfig extends React.Component {
       }
     });
   };
-  _exec = () => {
-    const java = spawn('java', ['-version']);
-    java.stdout.on('data', (data) => {
-      console.log(this._arr2str(data));
-    });
-    java.stderr.on('data', (data) =>  {
-      console.log(this._arr2str(data));
-    });
-    java.on('close', (data) => {
-      // 0 正常退出
-      // 1 非正常退出
-      console.log(data);
-    });
-  };
   _openDir = (callBack, type) => {
-    const properties = type === 'JAVA_HOME' ? 'openDirectory' : 'openFile';
+    const properties = type === 'JAVA_HOME' ? 'openDirectory' : 'multiSelections';
     const filter = type === 'JAVA_HOME' ? [] : [{name: 'jar', extensions: ['jar']}];
     dialog.showOpenDialog({
       title: 'Open Directory',
@@ -65,7 +51,11 @@ export default class JavaHomeConfig extends React.Component {
       filters: filter,
     }, (file) => {
       if (file) {
-        callBack && callBack(file[0]);
+        if (properties === 'multiSelections') {
+          callBack && callBack(file);
+        } else {
+          callBack && callBack(file[0]);
+        }
       }
     });
   };
@@ -130,22 +120,6 @@ export default class JavaHomeConfig extends React.Component {
           <Button style={{marginLeft: 5}} onClick={this._execFile}>测试</Button>
         </div>
       </div>
-      {/*<div className='pdman-config-java-config'>
-        <div className='pdman-config-java-config-label'>
-          <span>DB-CONNECTOR:</span>
-        </div>
-        <div className='pdman-config-java-config-input'>
-          <input
-            onChange={e => this._onChange(e, 'DB_CONNECTOR')}
-            value={data.DB_CONNECTOR}
-            placeholder='不填写则使用系统默认的连接器(谨慎修改)'
-          />
-        </div>
-        <div className='pdman-config-java-config-button'>
-          <Button onClick={() => this._iconClick('DB_CONNECTOR')} title='点击选择jar包'>...</Button>
-          <Button style={{marginLeft: 5}} onClick={this._connectJDBC}>测试</Button>
-        </div>
-      </div>*/}
     </div>);
   }
 }

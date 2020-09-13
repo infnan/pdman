@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 // 判断文件是否存在
 function fileExist(filePath) {
@@ -90,13 +91,34 @@ function saveFileSync(jsonObj, filePath) {
 // 异步保存json文件返回Promise
 function saveFilePromise(jsonObj, filePath) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(filePath, typeof jsonObj !== 'string' ? JSON.stringify(jsonObj, null, 2) : jsonObj, (err) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(jsonObj);
-      }
-    });
+    const hashSave = crypto.createHash('md5');
+    const saveString = typeof jsonObj !== 'string' ? JSON.stringify(jsonObj, null, 2) : jsonObj;
+    hashSave.update(saveString);
+    const hashSaveData = hashSave.digest('hex');
+    if (saveString) {
+      fs.writeFile(filePath, saveString, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          // 再次读取文件进行比较
+          fs.readFile(filePath, (error, data) => {
+            if (error) {
+              reject(err);
+            } else {
+              const hashRead = crypto.createHash('md5');
+              hashRead.update(data);
+              if (hashRead.digest('hex') === hashSaveData) {
+                resolve(jsonObj);
+              } else {
+                reject(new Error('保存失败'));
+              }
+            }
+          });
+        }
+      });
+    } else {
+      reject(new Error('保存失败'));
+    }
   });
 }
 // 异步保存json文件通过回调
@@ -161,7 +183,9 @@ function fileExistPromise(filePath, isCreate, obj, file = '.json') {
           reject(status);
         }
       } else if(filePath.endsWith(file)){
-        saveFilePromise(obj, filePath).then(resolve).catch(reject);
+        saveFilePromise(obj, filePath).then(resolve).catch((err) => {
+          reject(err);
+        });
       } else {
         resolve(filePath);
       }
@@ -259,6 +283,18 @@ function getDirNamePromise(filePath) {
   });
 }
 
+function readFile(file) {
+  return new Promise((res, rej) => {
+    fs.readFile(file, (err, data) => {
+      if(err){
+        rej(err);
+      }else{
+        res(data);
+      }
+    });
+  });
+}
+
 function writeFile(file, dataBuffer) {
   return new Promise((res, rej) => {
     fs.writeFile(file, dataBuffer, (err) => {
@@ -269,6 +305,10 @@ function writeFile(file, dataBuffer) {
       }
     });
   });
+}
+
+function copyFileSync(from, to) {
+  return fs.writeFileSync(to, fs.readFileSync(from));
 }
 
 export {
@@ -290,4 +330,6 @@ export {
   getDirListPromise,
   getDirNamePromise,
   writeFile,
+  readFile,
+  copyFileSync,
 };
