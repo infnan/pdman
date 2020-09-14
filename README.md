@@ -1,3 +1,7 @@
+# 如果不是为了研究需要的话，请直接下载安装版
+[百度网盘](https://pan.baidu.com/s/16pcIHXGHOzBr-wQsG2Pr_A)     提取码: ttqe
+
+
 # PDMan模型定义工具使用手册
 
 ## 启动
