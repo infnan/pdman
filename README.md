@@ -149,7 +149,9 @@ PDMan是由国内知名金融IT上市公司，内部研发团队设计的一款�
 -   [Linux](https://gitee.com/robergroup/pdman/attach_files)
 
 #### 欢迎加钉钉群交流
-*** 钉钉一群 ***
+***微信群***
+![输入图片说明](https://images.gitee.com/uploads/images/2020/1026/093028_081a399a_24669.png "屏幕截图.png")
+***钉钉一群***
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0101/223532_6021b767_24669.jpeg "WechatIMG807.jpeg")
 ![输入图片说明](https://images.gitee.com/uploads/images/2020/0101/223544_9928fbbc_24669.jpeg "WechatIMG808.jpeg")
 #### 捐赠作者
