@@ -1,3 +1,7 @@
+# 如果不是为了研究需要的话，请直接下载安装版
+[百度网盘](https://pan.baidu.com/s/16pcIHXGHOzBr-wQsG2Pr_A)     提取码: ttqe
+
+
 # PDMan模型定义工具使用手册
 
 ## 启动
@@ -70,7 +74,7 @@ $ npm run start                # 编译代码并且启动electron界面
 2.  最好的 **数据库版本管理工具**
 
 #### 项目介绍
-PDMan是由国内知名金融IT上市公司，内部研发团队设计的一款面向数据库模型建模的软件，是PowerDesigner的一个优秀的替代方案.特点如下：
+PDMan是PowerDesigner的一个优秀的替代方案.特点如下：
 1. 免费使用
 2. 功能简洁，去除晦涩难懂的设置，化繁为简，实用为上，上手非常容易。
 3. Windows，Mac，Linux三个平台均可以使用（**敲黑板，重点**）。
@@ -85,10 +89,10 @@ PDMan是由国内知名金融IT上市公司，内部研发团队设计的一款�
 
 **启动画面：**
 ![](https://gitee.com/uploads/images/2019/0411/183650_15612898_24669.jpeg)
-![](https://oscimg.oschina.net/oscnet/967c2a16712629058b08e22184a3c3c5fcd.jpg)
+![](https://images.gitee.com/uploads/images/2019/0527/114330_f01b3f3c_24669.jpeg)
 
 **主工作界面：**
-![](https://oscimg.oschina.net/oscnet/826d5265d68a43df33d8f4aef4498ff1469.jpg)
+![](https://images.gitee.com/uploads/images/2019/0527/114326_c8308ac6_24669.jpeg)
 ![](https://gitee.com/uploads/images/2019/0411/112013_835d9163_24669.jpeg)
 ![](https://gitee.com/uploads/images/2019/0411/183650_9a6efea9_24669.jpeg)
 ![](https://gitee.com/uploads/images/2019/0411/112017_72e44799_24669.jpeg)
@@ -97,12 +101,12 @@ PDMan是由国内知名金融IT上市公司，内部研发团队设计的一款�
 
 **数据类型以及数据域：**
 ![](https://gitee.com/uploads/images/2019/0411/112019_1641bb4f_24669.jpeg)
-![](https://oscimg.oschina.net/oscnet/80547a25e2f57c4ec107df1501aca9581fa.jpg)
-![](https://oscimg.oschina.net/oscnet/761364fcd82574c0df3973a62f1bcae6294.jpg)
-![](https://oscimg.oschina.net/oscnet/6ddeae5fa48746d2662b3e5d15587a77910.jpg)
+![](https://images.gitee.com/uploads/images/2020/0101/223333_63fb6ed2_24669.jpeg)
+![](https://images.gitee.com/uploads/images/2019/0527/114326_2bbc4e40_24669.jpeg)
+![](https://images.gitee.com/uploads/images/2019/0527/114326_4a735cf7_24669.jpeg)
 
 **脚本导出：**
-![](https://oscimg.oschina.net/oscnet/5ac2315c047e3de1a03052666cda7a24d21.jpg)
+![](https://images.gitee.com/uploads/images/2020/0101/223333_c391c2a8_24669.jpeg)
 导出特定类型的脚本 
 ![](https://gitee.com/uploads/images/2019/0411/112024_0135071c_24669.jpeg)
 
@@ -145,7 +149,12 @@ PDMan是由国内知名金融IT上市公司，内部研发团队设计的一款�
 -   [Linux](https://gitee.com/robergroup/pdman/attach_files)
 
 #### 欢迎加钉钉群交流
-![](https://static.oschina.net/uploads/img/201806/01151807_3YY6.jpg "")
+***微信群***
+![输入图片说明](https://images.gitee.com/uploads/images/2020/1026/093537_941fcd51_24669.png "屏幕截图.png")
+
+***钉钉一群***
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0101/223532_6021b767_24669.jpeg "WechatIMG807.jpeg")
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0101/223544_9928fbbc_24669.jpeg "WechatIMG808.jpeg")
 #### 捐赠作者
 ![输入图片说明](https://gitee.com/uploads/images/2019/0411/183645_ee6e3e21_24669.png "屏幕截图.png")
 ![输入图片说明](https://gitee.com/uploads/images/2019/0411/183709_92999b1a_24669.png "屏幕截图.png")
