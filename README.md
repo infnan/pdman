@@ -15,7 +15,7 @@
  你可以根据下面的命令在本地搭建一个PDMan项目:
  
 ```bash
-$ git clone http://192.168.60.43:18001/rdc/PDMan
+$ git clone https://gitee.com/robergroup/pdman.git
 $ cd PDMan
 $ npm install                   # 安装项目依赖
 $ npm run start                # 编译代码并且启动electron界面
