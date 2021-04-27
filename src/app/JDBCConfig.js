@@ -263,10 +263,17 @@ export default class JDBCConfig extends React.Component{
           }
           execFile(tempValue, commend,
             (error, stdout, stderr) => {
-              const result = (stdout || stderr);
+              const result0 = (stdout || stderr);
               this.setState({
                 loading: false,
               });
+              // 处理java中的乱七八糟的输出
+              const i = (result0 || '').indexOf('{')
+              let result = result0
+              if (i>0) {
+                result = result.substr(i)
+              }
+
               let tempResult = '';
               try {
                 tempResult = JSON.parse(result);
