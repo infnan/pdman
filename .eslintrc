@@ -51,6 +51,7 @@
     "no-mixed-operators":0, // 关闭禁止混合使用不同的操作符
     "no-console": 0, // 关闭禁止使用控制台
     "no-unused-expressions": 0, // 关闭禁止无返回值表达式
+    "no-continue": 0,
     "no-restricted-syntax": ["off"],
     "import/no-extraneous-dependencies": 0,
     "jsx-a11y/mouse-events-have-key-events": 0,

@@ -78,6 +78,8 @@ export default class Table extends React.Component {
           this._copyAsJson();
         } else if (e.keyCode === 86) {
           this._paste();
+        } else if (e.keyCode === 65) {
+          this._selectAll();
         }
       }
     } else if (e.keyCode === 40 || e.keyCode === 38) {
@@ -319,7 +321,6 @@ export default class Table extends React.Component {
   _copyAsTable = () => {
     const { selectedTrs, dataTable } = this.state;
     const { fields = [] } = dataTable;
-    console.log(dataTable);
 
     const copyFields = [
       'chnname',
@@ -423,7 +424,7 @@ export default class Table extends React.Component {
     } catch (e) {
       // 非json格式，尝试按Excel格式解析
       // TODO: 换行符支持
-      const lines = text.replace(/\r/g, '').split('\n');
+      const lines = text.replace(/\r/g, '\n').split('\n');
       const headers = lines[0].split('\t');
       const propList = headers.map(
         header => fieldMap[header.toLowerCase()] || '_',
@@ -440,6 +441,10 @@ export default class Table extends React.Component {
 
       tempData = [];
       for (let i = 1; i < lines.length; i += 1) {
+        if (!lines[i]) {
+          continue;
+        }
+
         const rawData = lines[i].split('\t');
         const obj = {};
 
@@ -507,6 +512,21 @@ export default class Table extends React.Component {
       });
     }
   };
+  _selectAll() {
+    const { selectedTrs, dataTable } = this.state;
+    if (
+      selectedTrs.length > 0 &&
+      selectedTrs.length === dataTable.fields.length
+    ) {
+      this.setState({
+        selectedTrs: [],
+      });
+    } else {
+      this.setState({
+        selectedTrs: dataTable.fields.map(field => field.key),
+      });
+    }
+  }
   render() {
     const { dataTable, selectedTrs } = this.state;
     const {
@@ -581,7 +601,7 @@ export default class Table extends React.Component {
           >
             <tbody>
               <tr className={`${prefix}-data-table-content-table-first-tr`}>
-                <th>{}</th>
+                <th onClick={_ => this._selectAll()}>{}</th>
                 {headers.map((header, index) => {
                   const column = columnOrder.filter(
                     c => c.code === header.fieldName,
