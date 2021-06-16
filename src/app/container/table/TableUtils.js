@@ -1,7 +1,7 @@
 import React from 'react';
 import _object from 'lodash/object';
 import defaultData from '../../defaultData';
-import {openModal, Input, Modal} from '../../../components';
+import { openModal, Input, Modal } from '../../../components';
 
 const clipboard = require('electron').clipboard;
 
@@ -35,7 +35,10 @@ export const addTable = (moduleName, dataSource, cb) => {
   };
   let flag = true;
   const validate = () => {
-    const resultName = validateTableAndNewName(getAllTable(dataSource), tempTableName);
+    const resultName = validateTableAndNewName(
+      getAllTable(dataSource),
+      tempTableName,
+    );
     flag = true;
     if (resultName !== tempTableName) {
       flag = false;
@@ -46,51 +49,76 @@ export const addTable = (moduleName, dataSource, cb) => {
     }
     return '';
   };
-  openModal(<div>
-    <Input autoFocus onChange={onChange} style={{width: '100%'}} validate={validate}/>
-  </div>, {
-    title: 'PDMan-新增数据表',
-    onOk: (modal) => {
-      if (!tempTableName) {
-        Modal.error({title: '新增失败', message: '数据表名不能为空'});
-      } else if (tempTableName.includes('/') || tempTableName.includes('&') || tempTableName.includes(':')) {
-        Modal.error({title: '新增失败', message: '数据表名不能包含/或者&或者:'});
-      } else {
-        const defaultFields = _object.get(dataSource, 'profile.defaultFields', defaultData.profile.defaultFields);
-        tempTableName && flag && modal && modal.close();
-        tempTableName && flag && cb && cb({
-          ...dataSource,
-          modules: (dataSource.modules || []).map((module) => {
-            if (module.name === moduleName) {
-              return {
-                ...module,
-                entities: (module.entities || []).concat({
-                  title: tempTableName,
-                  fields: defaultFields || [],
-                }),
-              };
-            }
-            return module;
-          }),
-        });
-      }
+  openModal(
+    <div>
+      <Input
+        autoFocus
+        onChange={onChange}
+        style={{ width: '100%' }}
+        validate={validate}
+      />
+    </div>,
+    {
+      title: 'PDMan-新增数据表',
+      onOk: (modal) => {
+        if (!tempTableName) {
+          Modal.error({ title: '新增失败', message: '数据表名不能为空' });
+        } else if (
+          tempTableName.includes('/') ||
+          tempTableName.includes('&') ||
+          tempTableName.includes(':')
+        ) {
+          Modal.error({
+            title: '新增失败',
+            message: '数据表名不能包含/或者&或者:',
+          });
+        } else {
+          const defaultFields = _object.get(
+            dataSource,
+            'profile.defaultFields',
+            defaultData.profile.defaultFields,
+          );
+          tempTableName && flag && modal && modal.close();
+          tempTableName &&
+            flag &&
+            cb &&
+            cb({
+              ...dataSource,
+              modules: (dataSource.modules || []).map((module) => {
+                if (module.name === moduleName) {
+                  return {
+                    ...module,
+                    entities: (module.entities || []).concat({
+                      title: tempTableName,
+                      fields: defaultFields || [],
+                    }),
+                  };
+                }
+                return module;
+              }),
+            });
+        }
+      },
     },
-  });
+  );
 };
 
 export const deleteTable = (moduleName, tableName, dataSource, cb) => {
-  cb && cb({
-    ...dataSource,
-    modules: (dataSource.modules || []).map((module) => {
-      if (module.name === moduleName) {
-        return {
-          ...module,
-          entities: (module.entities || []).filter(entity => entity.title !== tableName),
-        };
-      }
-      return module;
-    }),
-  });
+  cb &&
+    cb({
+      ...dataSource,
+      modules: (dataSource.modules || []).map((module) => {
+        if (module.name === moduleName) {
+          return {
+            ...module,
+            entities: (module.entities || []).filter(
+              entity => entity.title !== tableName,
+            ),
+          };
+        }
+        return module;
+      }),
+    });
 };
 
 export const renameTable = (moduleName, oldTableName, dataSource, cb) => {
@@ -100,7 +128,10 @@ export const renameTable = (moduleName, oldTableName, dataSource, cb) => {
   };
   let flag = true;
   const validate = () => {
-    const resultName = validateTableAndNewName(getAllTable(dataSource), tempTableName);
+    const resultName = validateTableAndNewName(
+      getAllTable(dataSource),
+      tempTableName,
+    );
     flag = true;
     if (resultName !== tempTableName) {
       flag = false;
@@ -111,67 +142,99 @@ export const renameTable = (moduleName, oldTableName, dataSource, cb) => {
     }
     return '';
   };
-  openModal(<div>
-    <Input autoFocus onChange={onChange} style={{width: '100%'}} validate={validate} defaultValue={oldTableName}/>
-  </div>, {
-    title: 'PDMan-重命名数据表',
-    onOk: (modal) => {
-      if (tempTableName === oldTableName) {
-        Modal.error({title: '重命名失败', message: '数据表名不能与旧名相同'});
-      }  else if (tempTableName.includes('/') || tempTableName.includes('&') || tempTableName.includes(':')) {
-        Modal.error({title: '新增失败', message: '数据表名不能包含/或者&或者:'});
-      }else {
-        flag && modal && modal.close();
-        flag && cb && cb({
-          ...dataSource,
-          modules: (dataSource.modules || []).map((module) => {
-            if (module.name === moduleName) {
-              return {
-                ...module,
-                entities: (module.entities || []).map((entity) => {
-                  if (entity.title === oldTableName) {
+  openModal(
+    <div>
+      <Input
+        autoFocus
+        onChange={onChange}
+        style={{ width: '100%' }}
+        validate={validate}
+        defaultValue={oldTableName}
+      />
+    </div>,
+    {
+      title: 'PDMan-重命名数据表',
+      onOk: (modal) => {
+        if (tempTableName === oldTableName) {
+          Modal.error({
+            title: '重命名失败',
+            message: '数据表名不能与旧名相同',
+          });
+        } else if (
+          tempTableName.includes('/') ||
+          tempTableName.includes('&') ||
+          tempTableName.includes(':')
+        ) {
+          Modal.error({
+            title: '新增失败',
+            message: '数据表名不能包含/或者&或者:',
+          });
+        } else {
+          flag && modal && modal.close();
+          flag &&
+            cb &&
+            cb(
+              {
+                ...dataSource,
+                modules: (dataSource.modules || []).map((module) => {
+                  if (module.name === moduleName) {
                     return {
-                      ...entity,
-                      title: tempTableName,
+                      ...module,
+                      entities: (module.entities || []).map((entity) => {
+                        if (entity.title === oldTableName) {
+                          return {
+                            ...entity,
+                            title: tempTableName,
+                          };
+                        }
+                        return entity;
+                      }),
                     };
                   }
-                  return entity;
+                  return module;
                 }),
-              };
-            }
-            return module;
-          }),
-        }, {oldName: oldTableName, newName: tempTableName});
-      }
+              },
+              { oldName: oldTableName, newName: tempTableName },
+            );
+        }
+      },
     },
-  });
+  );
 };
 
 export const copyTable = (moduleName, tableName, dataSource) => {
-  const tempModule = (dataSource.modules || []).filter(module => module.name === moduleName)[0];
+  const tempModule = (dataSource.modules || []).filter(
+    module => module.name === moduleName,
+  )[0];
   if (tempModule) {
     let table = [];
     if (tableName) {
-      table = (tempModule.entities || []).filter(entity => entity.title === tableName);
+      table = (tempModule.entities || []).filter(
+        entity => entity.title === tableName,
+      );
     } else {
       table = tempModule.entities;
     }
-    clipboard.writeText(
-      JSON.stringify(table));
+    clipboard.writeText(JSON.stringify(table));
   }
 };
 
 export const cutTable = (moduleName, tableName, dataSource) => {
-  const tempModule = (dataSource.modules || []).filter(module => module.name === moduleName)[0];
+  const tempModule = (dataSource.modules || []).filter(
+    module => module.name === moduleName,
+  )[0];
   if (tempModule) {
     let table = [];
     if (tableName) {
-      table = (tempModule.entities || []).filter(entity => entity.title === tableName);
+      table = (tempModule.entities || []).filter(
+        entity => entity.title === tableName,
+      );
     } else {
       table = tempModule.entities;
     }
     clipboard.writeText(
-      JSON.stringify(table.map(entity => ({...entity, rightType: 'cut'}))));
+      JSON.stringify(table.map(entity => ({ ...entity, rightType: 'cut' }))),
+    );
   }
 };
 
@@ -189,32 +252,38 @@ export const pasteTable = (moduleName, dataSource, cb) => {
   }
   // 判断粘贴板的数据是否符合模块的格式
   if (Array.isArray(data) && data.every(table => validateTable(table))) {
-    const tempsData = data.filter(d => d.rightType === 'cut').map(d => d.title);
-    cb && cb({
-      ...dataSource,
-      modules: (dataSource.modules || [])
-        .map((module) => {
+    const tempsData = data
+      .filter(d => d.rightType === 'cut')
+      .map(d => d.title);
+    cb &&
+      cb({
+        ...dataSource,
+        modules: (dataSource.modules || []).map((module) => {
           if (module.name === moduleName) {
             return {
               ...module,
               entities: (module.entities || [])
                 .filter(entity => !tempsData.includes(entity.title))
-                .concat(data.map((da) => {
-                  const title = validateTableAndNewName(
-                    getAllTable(dataSource)
-                      .filter(entity => !tempsData.includes(entity)).concat(copyTables),
-                    da.title);
-                  copyTables.push(title);
-                  return {
-                    ..._object.omit(da, ['rightType']),
-                    title,
-                  };
-                })),
+                .concat(
+                  data.map((da) => {
+                    const title = validateTableAndNewName(
+                      getAllTable(dataSource)
+                        .filter(entity => !tempsData.includes(entity))
+                        .concat(copyTables),
+                      da.title,
+                    );
+                    copyTables.push(title);
+                    return {
+                      ..._object.omit(da, ['rightType']),
+                      title,
+                    };
+                  }),
+                ),
             };
           }
           return module;
         }),
-    });
+      });
   } else {
     console.log('无效的数据格式');
   }

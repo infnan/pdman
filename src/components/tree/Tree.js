@@ -9,7 +9,6 @@ import { addOnResize } from '../../utils/listener';
 import defaultConfig from '../../../profile';
 
 class Tree extends React.Component {
-
   static defaultProps = {
     defaultChecked: '',
     defaultExpanded: '',
@@ -30,16 +29,17 @@ class Tree extends React.Component {
     };
   }
 
-  componentDidMount(){
+  componentDidMount() {
     addOnResize(this._setTabsHeight);
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.flag = false;
   }
   _setTabsHeight = () => {
-    this.flag && this.setState({
-      height: document.body.clientHeight
-    })
+    this.flag &&
+      this.setState({
+        height: document.body.clientHeight,
+      });
   };
 
   _onClick = (e, value, cb) => {
@@ -53,7 +53,7 @@ class Tree extends React.Component {
     // 判断是否按住了shift
     if (e.shiftKey) {
       if (tempChecked.includes(value)) {
-        tempChecked = tempChecked.filter(c => c !== value);
+        tempChecked = tempChecked.filter((c) => c !== value);
         tempCancelChecked = [value];
       } else {
         tempCancelChecked = [];
@@ -64,14 +64,17 @@ class Tree extends React.Component {
       tempChecked = [value];
     }
     // 去重
-    this.setState({
-      cancelChecked: [...new Set(tempCancelChecked)],
-      checked: [...new Set(tempChecked)],
-      blurChecked: []
-    }, () => {
-      // 点击后渲染结束回调
-      cb && cb();
-    });
+    this.setState(
+      {
+        cancelChecked: [...new Set(tempCancelChecked)],
+        checked: [...new Set(tempChecked)],
+        blurChecked: [],
+      },
+      () => {
+        // 点击后渲染结束回调
+        cb && cb();
+      }
+    );
   };
 
   _onDoubleClick = (value) => {
@@ -82,12 +85,13 @@ class Tree extends React.Component {
   // 递归给子组件注入参数
   _setProps = (item, row, onDrop, onContextMenu) => {
     let tempValue = [];
-    const component = [].concat(item.props.children).map(child => {
+    const component = [].concat(item.props.children).map((child) => {
       tempValue.push(child.props.value);
       if (!tempValue.includes(child.props.realName)) {
         tempValue.push(child.props.realName);
       }
-      const childrenData = child.props.children &&
+      const childrenData =
+        child.props.children &&
         this._setProps(child, row + 1, onDrop, onContextMenu);
       tempValue = tempValue.concat((childrenData && childrenData.value) || []);
       return {
@@ -105,12 +109,12 @@ class Tree extends React.Component {
           cancelChecked: this.state.cancelChecked,
           blurChecked: this.state.blurChecked,
           searchValue: this.state.searchValue,
-        }
+        },
       };
     });
     return {
       component,
-      value: tempValue
+      value: tempValue,
     };
   };
 
@@ -138,53 +142,61 @@ class Tree extends React.Component {
   render() {
     const { children, onDrop, showSearch } = this.props;
     const { height } = this.state;
-    return (<div
-      tabIndex="0"
-      className='pdman-tree'
-      onBlur={this._onBlur}
-      id="tree"
-      style={{
-        height: height - 105 - defaultConfig.menuHeight,
-      }}
-    >
+    return (
       <div
-        ref={instance => this.searchInstance = instance}
+        tabIndex='0'
+        className='pdman-tree'
+        onBlur={this._onBlur}
+        id='tree'
         style={{
-          width: 'calc(20% - 10px)',
-          padding: '5px 5px 5px 10px',
-          position: 'fixed',
-          background: '#FFFFFF',
-          zIndex: 99,
-          minWidth: 190,
-          maxWidth: '80%',
-          display: showSearch ? '' : 'none',
-        }}>
-        <Input onChange={this._searchChange} placeholder='快速搜索数据表' style={{width: '100%', height: 20}}/>
+          height: height - 105 - defaultConfig.menuHeight,
+        }}
+      >
+        <div
+          ref={(instance) => (this.searchInstance = instance)}
+          style={{
+            width: 'calc(20% - 10px)',
+            padding: '5px 5px 5px 10px',
+            position: 'fixed',
+            background: '#FFFFFF',
+            zIndex: 99,
+            minWidth: 190,
+            maxWidth: '80%',
+            display: showSearch ? '' : 'none',
+          }}
+        >
+          <Input
+            onChange={this._searchChange}
+            placeholder='快速搜索数据表'
+            style={{ width: '100%', height: 20 }}
+          />
+        </div>
+        <ul style={{ marginTop: showSearch ? 32 : 0 }}>
+          {[].concat(children).map((item) => {
+            const childrenData =
+              item.props.children &&
+              this._setProps(item, 0, onDrop, this._onContextMenu);
+            return {
+              ...item,
+              props: {
+                ...item.props,
+                onClick: this._onClick,
+                onDrop,
+                onContextMenu: this._onContextMenu,
+                onDoubleClick: this._onDoubleClick,
+                children: childrenData && childrenData.component,
+                childrenValue: (childrenData && childrenData.value) || [],
+                row: 0,
+                checked: this.state.checked,
+                cancelChecked: this.state.cancelChecked,
+                blurChecked: this.state.blurChecked,
+                searchValue: this.state.searchValue,
+              },
+            };
+          })}
+        </ul>
       </div>
-      <ul style={{marginTop: showSearch ? 32 : 0}}>
-        {[].concat(children).map(item => {
-          const childrenData = item.props.children &&
-            this._setProps(item, 0, onDrop, this._onContextMenu);
-          return {
-            ...item,
-            props: {
-              ...item.props,
-              onClick: this._onClick,
-              onDrop,
-              onContextMenu: this._onContextMenu,
-              onDoubleClick: this._onDoubleClick,
-              children: childrenData && childrenData.component,
-              childrenValue: (childrenData && childrenData.value) || [],
-              row: 0,
-              checked: this.state.checked,
-              cancelChecked: this.state.cancelChecked,
-              blurChecked: this.state.blurChecked,
-              searchValue: this.state.searchValue,
-            }
-          };
-        })}
-      </ul>
-    </div>);
+    );
   }
 }
 

@@ -12,23 +12,43 @@ const opt = (key, menu, dataSource) => {
   if (type === 'datatype' || type === 'database') {
     // 1.数据域复制
     const allDatabase = _object.get(dataSource, 'dataTypeDomains.database', []);
-    const allDatatypes = _object.get(dataSource, 'dataTypeDomains.datatype', []);
+    const allDatatypes = _object.get(
+      dataSource,
+      'dataTypeDomains.datatype',
+      [],
+    );
     let someDatabase = [];
     let someDatatypes = [];
-    const checkedDatabase = checked.filter(c => c.startsWith('database&data&'));
+    const checkedDatabase = checked.filter(c =>
+      c.startsWith('database&data&'),
+    );
     if (checkedDatabase.length > 0) {
       someDatabase = checkedDatabase.map((c) => {
-        return allDatabase.filter(d => d.code === c.split('database&data&')[1])[0];
+        return allDatabase.filter(
+          d => d.code === c.split('database&data&')[1],
+        )[0];
       });
-    } else if (checked.some(c => c.split('&').length === 2 && c.startsWith('database&'))) {
+    } else if (
+      checked.some(
+        c => c.split('&').length === 2 && c.startsWith('database&'),
+      )
+    ) {
       someDatabase = allDatabase;
     }
-    const checkedDatatypes = checked.filter(c => c.startsWith('datatype&data&'));
+    const checkedDatatypes = checked.filter(c =>
+      c.startsWith('datatype&data&'),
+    );
     if (checkedDatatypes.length > 0) {
       someDatatypes = checkedDatatypes.map((c) => {
-        return allDatatypes.filter(d => d.code === c.split('datatype&data&')[1])[0];
+        return allDatatypes.filter(
+          d => d.code === c.split('datatype&data&')[1],
+        )[0];
       });
-    } else if (checked.some(c => c.split('&').length === 2 && c.startsWith('database&'))) {
+    } else if (
+      checked.some(
+        c => c.split('&').length === 2 && c.startsWith('database&'),
+      )
+    ) {
       someDatatypes = allDatatypes;
     }
     const data = {
@@ -43,7 +63,7 @@ const opt = (key, menu, dataSource) => {
     const checkedEntities = checked.filter(c => c.startsWith('entity&'));
     let leftEntities = [...checkedEntities];
     const checkedModulesData = checked.reduce((pre, next) => {
-      if (next.startsWith('module&')){
+      if (next.startsWith('module&')) {
         const name = next.split('&')[1];
         const module = allModules.filter(m => m.name === name)[0] || {};
         const some = checkedEntities
@@ -55,9 +75,11 @@ const opt = (key, menu, dataSource) => {
             return false;
           })
           .map((e) => {
-            return (module.entities || []).filter(me => me.title === e.split('&')[2])[0];
+            return (module.entities || []).filter(
+              me => me.title === e.split('&')[2],
+            )[0];
           });
-        const entities = some.length > 0 ? some : (module.entities || []);
+        const entities = some.length > 0 ? some : module.entities || [];
         return {
           ...pre,
           [name]: {
@@ -75,7 +97,9 @@ const opt = (key, menu, dataSource) => {
         entities: leftEntities.map((e) => {
           const name = e.split('&')[1];
           const module = allModules.filter(m => m.name === name)[0] || {};
-          return (module.entities || []).filter(me => me.title === e.split('&')[2])[0];
+          return (module.entities || []).filter(
+            me => me.title === e.split('&')[2],
+          )[0];
         }),
       },
     };

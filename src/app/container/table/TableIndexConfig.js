@@ -4,11 +4,14 @@ import { Checkbox, Input, Icon, openModal } from '../../../components';
 
 import './style/indexConfig.less';
 import { uuid } from '../../../utils/uuid';
-import {moveArrayPosition, moveArrayPositionByFuc} from '../../../utils/array';
+import {
+  moveArrayPosition,
+  moveArrayPositionByFuc,
+} from '../../../utils/array';
 import ImportFields from './ImportFields';
 
-export default class TableIndexConfig extends React.Component{
-  constructor(props){
+export default class TableIndexConfig extends React.Component {
+  constructor(props) {
     super(props);
     this.emptyData = [];
     this.state = {
@@ -17,9 +20,12 @@ export default class TableIndexConfig extends React.Component{
       dataTable: this._getDataTable(props),
     };
   }
-  componentWillReceiveProps(nextProps){
+  componentWillReceiveProps(nextProps) {
     // 如果当前Tab为刚刚激活的状态，则需要判断dataTable是否需要更新
-    if ((nextProps.tabShow === 'indexs') && (this.props.tabShow !== nextProps.tabShow)) {
+    if (
+      nextProps.tabShow === 'indexs' &&
+      this.props.tabShow !== nextProps.tabShow
+    ) {
       this.setState({
         dataTable: {
           ...this._getDataTable(nextProps),
@@ -28,12 +34,14 @@ export default class TableIndexConfig extends React.Component{
       });
     }
   }
-  shouldComponentUpdate(nextProps, nextState){
-    return (nextState.dataTable !== this.state.dataTable)
-      || (nextState.selectedIndexs !== this.state.selectedIndexs)
-      || (nextState.selectedFields !== this.state.selectedFields)
-      || ((nextState.dataTable.indexs || this.emptyData)
-        !== (this.state.dataTable.indexs || this.emptyData));
+  shouldComponentUpdate(nextProps, nextState) {
+    return (
+      nextState.dataTable !== this.state.dataTable ||
+      nextState.selectedIndexs !== this.state.selectedIndexs ||
+      nextState.selectedFields !== this.state.selectedFields ||
+      (nextState.dataTable.indexs || this.emptyData) !==
+        (this.state.dataTable.indexs || this.emptyData)
+    );
   }
   getData = () => {
     return this.state.dataTable.indexs || [];
@@ -61,7 +69,7 @@ export default class TableIndexConfig extends React.Component{
   };
   _getStyle = (code) => {
     let minWidth = code === 'Input' ? 200 : '100%';
-    let width = (code === 'Input') ? '100%' : 'auto';
+    let width = code === 'Input' ? '100%' : 'auto';
     return {
       minWidth,
       width,
@@ -77,7 +85,7 @@ export default class TableIndexConfig extends React.Component{
     if (this.status === status) {
       const data = e.dataTransfer.getData('Text');
       const { dataTable } = this.state;
-      let tempDatable = {...dataTable};
+      let tempDatable = { ...dataTable };
       if (this.status === 'fields') {
         tempDatable = {
           ...dataTable,
@@ -110,9 +118,11 @@ export default class TableIndexConfig extends React.Component{
     const selectedIndexs = this.state[name];
     let tempSelectedTrs = [...selectedIndexs];
     if (tempSelectedTrs.some(tr => tr === key)) {
-      tempSelectedTrs = e.shiftKey ? tempSelectedTrs.filter(tr => tr !== key) : [];
+      tempSelectedTrs = e.shiftKey
+        ? tempSelectedTrs.filter(tr => tr !== key)
+        : [];
     } else {
-      e.shiftKey ? tempSelectedTrs.push(key) : tempSelectedTrs = [key];
+      e.shiftKey ? tempSelectedTrs.push(key) : (tempSelectedTrs = [key]);
     }
     this.setState({
       [name]: tempSelectedTrs,
@@ -127,7 +137,8 @@ export default class TableIndexConfig extends React.Component{
           return index;
         }
         return null;
-      }).filter(field => field !== null);
+      })
+      .filter(field => field !== null);
     const maxIndex = Math.max(...selectedTrsIndex);
     const minIndex = Math.min(...selectedTrsIndex);
     let changeIndex = type === 'up' ? minIndex - 1 : maxIndex + 1;
@@ -135,17 +146,25 @@ export default class TableIndexConfig extends React.Component{
       // 获取将要插入位置的属性
       // const changeField = tempFields[changeIndex];
       // 循环移动每一条数据
-      selectedTrsIndex.map(fieldIndex => ({
-        fieldIndex,
-        from: tempFields[fieldIndex],
-        to: tempFields[type === 'up' ? fieldIndex - 1 : fieldIndex + 1],
-      }))
-        .sort((a, b) => (type === 'up' ? a.fieldIndex - b.fieldIndex : b.fieldIndex - a.fieldIndex))
+      selectedTrsIndex
+        .map(fieldIndex => ({
+          fieldIndex,
+          from: tempFields[fieldIndex],
+          to: tempFields[type === 'up' ? fieldIndex - 1 : fieldIndex + 1],
+        }))
+        .sort((a, b) =>
+          (type === 'up'
+            ? a.fieldIndex - b.fieldIndex
+            : b.fieldIndex - a.fieldIndex),
+        )
         .forEach((field) => {
           tempFields = moveArrayPositionByFuc(
-            tempFields,  (f) => {
+            tempFields,
+            (f) => {
               return f.key === field.from.key;
-            }, type === 'up' ? field.fieldIndex - 1 : field.fieldIndex + 1);
+            },
+            type === 'up' ? field.fieldIndex - 1 : field.fieldIndex + 1,
+          );
         });
       this.update({
         ...dataTable,
@@ -157,19 +176,24 @@ export default class TableIndexConfig extends React.Component{
     const { selectedIndexs, dataTable } = this.state;
     // 获取上一行
     let tempFields = [...(dataTable.indexs || [])];
-    const minIndex = Math.min(...tempFields
-      .map((field, index) => {
-        if (selectedIndexs.includes(field.key)) {
-          return index;
-        }
-        return null;
-      }).filter(field => field !== null));
-    const newFields = (dataTable.indexs || []).filter(fid => !selectedIndexs.includes(fid.key));
+    const minIndex = Math.min(
+      ...tempFields
+        .map((field, index) => {
+          if (selectedIndexs.includes(field.key)) {
+            return index;
+          }
+          return null;
+        })
+        .filter(field => field !== null),
+    );
+    const newFields = (dataTable.indexs || []).filter(
+      fid => !selectedIndexs.includes(fid.key),
+    );
     this.update({
       ...dataTable,
       indexs: newFields,
     });
-    const selectField = newFields[(minIndex - 1) < 0 ? 0 : minIndex - 1];
+    const selectField = newFields[minIndex - 1 < 0 ? 0 : minIndex - 1];
     this.setState({
       selectedIndexs: (selectField && [selectField.key]) || [],
     });
@@ -183,7 +207,8 @@ export default class TableIndexConfig extends React.Component{
           return index;
         }
         return null;
-      }).filter(field => field !== null);
+      })
+      .filter(field => field !== null);
     const name = this._getFieldName(dataTable.indexs || [], 'untitled');
     const newIndex = {
       name: name,
@@ -219,7 +244,7 @@ export default class TableIndexConfig extends React.Component{
   };
   _importField = (fields, key) => {
     const { dataTable } = this.state;
-    openModal(<ImportFields dataTable={dataTable} fields={fields}/>, {
+    openModal(<ImportFields dataTable={dataTable} fields={fields} />, {
       title: '引入字段',
       onOk: (modal, com) => {
         const newFields = com.getFields();
@@ -250,7 +275,8 @@ export default class TableIndexConfig extends React.Component{
           return index;
         }
         return null;
-      }).filter(field => field !== null);
+      })
+      .filter(field => field !== null);
     const maxIndex = Math.max(...selectedTrsIndex);
     const minIndex = Math.min(...selectedTrsIndex);
     let changeIndex = type === 'up' ? minIndex - 1 : maxIndex + 1;
@@ -258,17 +284,25 @@ export default class TableIndexConfig extends React.Component{
       // 获取将要插入位置的属性
       // const changeField = tempFields[changeIndex];
       // 循环移动每一条数据
-      selectedTrsIndex.map(fieldIndex => ({
-        fieldIndex,
-        from: tempFields[fieldIndex],
-        to: tempFields[type === 'up' ? fieldIndex - 1 : fieldIndex + 1],
-      }))
-        .sort((a, b) => (type === 'up' ? a.fieldIndex - b.fieldIndex : b.fieldIndex - a.fieldIndex))
+      selectedTrsIndex
+        .map(fieldIndex => ({
+          fieldIndex,
+          from: tempFields[fieldIndex],
+          to: tempFields[type === 'up' ? fieldIndex - 1 : fieldIndex + 1],
+        }))
+        .sort((a, b) =>
+          (type === 'up'
+            ? a.fieldIndex - b.fieldIndex
+            : b.fieldIndex - a.fieldIndex),
+        )
         .forEach((field) => {
           tempFields = moveArrayPositionByFuc(
-            tempFields,  (f) => {
+            tempFields,
+            (f) => {
               return f === field.from;
-            }, type === 'up' ? field.fieldIndex - 1 : field.fieldIndex + 1);
+            },
+            type === 'up' ? field.fieldIndex - 1 : field.fieldIndex + 1,
+          );
         });
     }
     this.update({
@@ -289,13 +323,16 @@ export default class TableIndexConfig extends React.Component{
     const indexData = (dataTable.indexs || []).filter(d => d.key === key)[0];
     let tempFields = [...((indexData && indexData.fields) || [])];
     // 获取上一行
-    const minIndex = Math.min(...tempFields
-      .map((field, index) => {
-        if (selectedFields.includes(field)) {
-          return index;
-        }
-        return null;
-      }).filter(field => field !== null));
+    const minIndex = Math.min(
+      ...tempFields
+        .map((field, index) => {
+          if (selectedFields.includes(field)) {
+            return index;
+          }
+          return null;
+        })
+        .filter(field => field !== null),
+    );
     const newFields = tempFields.filter(fid => !selectedFields.includes(fid));
     this.update({
       ...dataTable,
@@ -309,12 +346,12 @@ export default class TableIndexConfig extends React.Component{
         return d;
       }),
     });
-    const selectField = newFields[(minIndex - 1) < 0 ? 0 : minIndex - 1];
+    const selectField = newFields[minIndex - 1 < 0 ? 0 : minIndex - 1];
     this.setState({
       selectedFields: (selectField && [selectField.key]) || [],
     });
   };
-  render(){
+  render() {
     const { selectedIndexs = [], selectedFields = [], dataTable } = this.state;
     const { prefix = 'pdman', height } = this.props;
     const dataFields = dataTable.fields || [];
@@ -326,51 +363,66 @@ export default class TableIndexConfig extends React.Component{
     }
     // 获取完整的属性信息
     const fields = ((indexField && indexField.fields) || [])
-      .map(name => dataFields.filter(dt => name === dt.name)[0]).filter(field => !!field);
+      .map(name => dataFields.filter(dt => name === dt.name)[0])
+      .filter(field => !!field);
     const { indexs = [] } = dataTable;
-    return (<div className='pdman-table-index-config'>
-      <div className='pdman-table-index-config-left'>
-        <div className={`${prefix}-data-table-content-table-opt-icon`}>
-          <Icon
-            onClick={() => selectedIndexs.length !== 0 && this._moveIndex('up')}
-            className={selectedIndexs.length === 0 ? `${prefix}-data-table-content-table-disabled-icon` :
-              `${prefix}-data-table-content-table-normal-icon`}
-            type="fa-long-arrow-up"
-          />
-          <Icon
-            onClick={() => selectedIndexs.length !== 0 && this._moveIndex('bottom')}
-            className={selectedIndexs.length === 0 ?
-              `${prefix}-data-table-content-table-disabled-icon`
-              : `${prefix}-data-table-content-table-normal-icon`}
-            type="fa-long-arrow-down"
-          />
-          <Icon
-            onClick={() => selectedIndexs.length !== 0 && this._deleteIndex()}
-            className={selectedIndexs.length === 0 ?
-              `${prefix}-data-table-content-table-disabled-icon`
-              : `${prefix}-data-table-content-table-normal-icon`}
-            type="fa-minus"
-          />
-          <Icon
-            onClick={() => this._addIndex()}
-            className={`${prefix}-data-table-content-table-normal-icon`}
-            type="fa-plus"
-          />
-        </div>
-        <div className='pdman-table-index-config-left-list' style={{height: height - 190, overflow: 'auto'}}>
-          <table
-            style={{minWidth: 200}}
-            tabIndex="0"
-            className={`${prefix}-data-table-content-table`}
+    return (
+      <div className='pdman-table-index-config'>
+        <div className='pdman-table-index-config-left'>
+          <div className={`${prefix}-data-table-content-table-opt-icon`}>
+            <Icon
+              onClick={() =>
+                selectedIndexs.length !== 0 && this._moveIndex('up')
+              }
+              className={
+                selectedIndexs.length === 0
+                  ? `${prefix}-data-table-content-table-disabled-icon`
+                  : `${prefix}-data-table-content-table-normal-icon`
+              }
+              type='fa-long-arrow-up'
+            />
+            <Icon
+              onClick={() =>
+                selectedIndexs.length !== 0 && this._moveIndex('bottom')
+              }
+              className={
+                selectedIndexs.length === 0
+                  ? `${prefix}-data-table-content-table-disabled-icon`
+                  : `${prefix}-data-table-content-table-normal-icon`
+              }
+              type='fa-long-arrow-down'
+            />
+            <Icon
+              onClick={() => selectedIndexs.length !== 0 && this._deleteIndex()}
+              className={
+                selectedIndexs.length === 0
+                  ? `${prefix}-data-table-content-table-disabled-icon`
+                  : `${prefix}-data-table-content-table-normal-icon`
+              }
+              type='fa-minus'
+            />
+            <Icon
+              onClick={() => this._addIndex()}
+              className={`${prefix}-data-table-content-table-normal-icon`}
+              type='fa-plus'
+            />
+          </div>
+          <div
+            className='pdman-table-index-config-left-list'
+            style={{ height: height - 190, overflow: 'auto' }}
           >
-            <tbody>
-              <tr className={`${prefix}-data-table-content-table-first-tr`}>
-                <th>{}</th>
-                <th>索引名</th>
-                <th>是否唯一</th>
-              </tr>
-              {
-                indexs.map((data, index) => (
+            <table
+              style={{ minWidth: 200 }}
+              tabIndex='0'
+              className={`${prefix}-data-table-content-table`}
+            >
+              <tbody>
+                <tr className={`${prefix}-data-table-content-table-first-tr`}>
+                  <th>{}</th>
+                  <th>索引名</th>
+                  <th>是否唯一</th>
+                </tr>
+                {indexs.map((data, index) => (
                   <tr
                     onClick={e => this._trClick(e, data.key, 'indexs')}
                     draggable
@@ -379,13 +431,20 @@ export default class TableIndexConfig extends React.Component{
                     onDragOver={this._onDragOver}
                     key={data.key}
                     className={`${prefix}-data-table-content-table-normal-tr
-                        ${selectedIndexs.some(tr => tr === data.key) ?
-                    `${prefix}-data-table-content-table-selected-tr` :
-                    `${prefix}-data-table-content-table-unselected-tr`}`}>
-                    <th style={{width: 35, userSelect: 'none'}}>{index + 1}</th>
+                        ${
+                          selectedIndexs.some(tr => tr === data.key)
+                            ? `${prefix}-data-table-content-table-selected-tr`
+                            : `${prefix}-data-table-content-table-unselected-tr`
+                        }`}
+                  >
+                    <th style={{ width: 35, userSelect: 'none' }}>
+                      {index + 1}
+                    </th>
                     <th>
                       <Input
-                        onChange={e => this._inputOnChange(e, data.key, 'name')}
+                        onChange={e =>
+                          this._inputOnChange(e, data.key, 'name')
+                        }
                         value={data.name || ''}
                         style={{
                           height: 23,
@@ -395,7 +454,9 @@ export default class TableIndexConfig extends React.Component{
                     </th>
                     <th>
                       <Checkbox
-                        onChange={e => this._inputOnChange(e, data.key, 'isUnique')}
+                        onChange={e =>
+                          this._inputOnChange(e, data.key, 'isUnique')
+                        }
                         value={data.isUnique || false}
                         style={{
                           height: 15,
@@ -404,73 +465,98 @@ export default class TableIndexConfig extends React.Component{
                       />
                     </th>
                   </tr>
-                ))
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div
+          className='pdman-table-index-config-right'
+          style={{ display: key ? '' : 'none' }}
+        >
+          <div className={`${prefix}-data-table-content-table-opt-icon`}>
+            <Icon
+              onClick={() =>
+                selectedFields.length !== 0 && this._moveField('up', key)
               }
-            </tbody>
-          </table>
+              className={
+                selectedFields.length === 0
+                  ? `${prefix}-data-table-content-table-disabled-icon`
+                  : `${prefix}-data-table-content-table-normal-icon`
+              }
+              type='fa-long-arrow-up'
+            />
+            <Icon
+              onClick={() =>
+                selectedFields.length !== 0 && this._moveField('bottom', key)
+              }
+              className={
+                selectedFields.length === 0
+                  ? `${prefix}-data-table-content-table-disabled-icon`
+                  : `${prefix}-data-table-content-table-normal-icon`
+              }
+              type='fa-long-arrow-down'
+            />
+            <Icon
+              onClick={() =>
+                selectedFields.length !== 0 && this._deleteField(key)
+              }
+              className={
+                selectedFields.length === 0
+                  ? `${prefix}-data-table-content-table-disabled-icon`
+                  : `${prefix}-data-table-content-table-normal-icon`
+              }
+              type='fa-minus'
+            />
+            <Icon
+              onClick={() => this._importField(fields, key)}
+              className={`${prefix}-data-table-content-table-normal-icon`}
+              type='fa-plus'
+            />
+          </div>
+          <div className='pdman-table-index-config-right-list'>
+            <table
+              style={{ minWidth: 200 }}
+              tabIndex='0'
+              className={`${prefix}-data-table-content-table`}
+            >
+              <tbody>
+                <tr className={`${prefix}-data-table-content-table-first-tr`}>
+                  <th>{}</th>
+                  <th>代码</th>
+                  <th>名称</th>
+                </tr>
+                {fields.map((f, index) => (
+                  <tr
+                    onClick={e => this._trClick(e, f.name, 'fields')}
+                    draggable
+                    onDragStart={e => this._onDragStart(e, index, 'fields')}
+                    onDrop={e => this._onDrop(e, index, 'fields', key)}
+                    onDragOver={this._onDragOver}
+                    className={`${prefix}-data-table-content-table-normal-tr
+                        ${
+                          selectedFields.some(tr => tr === f.name)
+                            ? `${prefix}-data-table-content-table-selected-tr`
+                            : `${prefix}-data-table-content-table-unselected-tr`
+                        }`}
+                    key={f.key}
+                  >
+                    <th style={{ width: 35, userSelect: 'none' }}>
+                      {index + 1}
+                    </th>
+                    <th>
+                      <span>{f.name}</span>
+                    </th>
+                    <th>
+                      <span>{f.chnname}</span>
+                    </th>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div className='pdman-table-index-config-right' style={{display: key ? '' : 'none'}}>
-        <div className={`${prefix}-data-table-content-table-opt-icon`}>
-          <Icon
-            onClick={() => selectedFields.length !== 0 && this._moveField('up', key)}
-            className={selectedFields.length === 0 ? `${prefix}-data-table-content-table-disabled-icon` :
-              `${prefix}-data-table-content-table-normal-icon`}
-            type="fa-long-arrow-up"
-          />
-          <Icon
-            onClick={() => selectedFields.length !== 0 && this._moveField('bottom', key)}
-            className={selectedFields.length === 0 ?
-              `${prefix}-data-table-content-table-disabled-icon`
-              : `${prefix}-data-table-content-table-normal-icon`}
-            type="fa-long-arrow-down"
-          />
-          <Icon
-            onClick={() => selectedFields.length !== 0 && this._deleteField(key)}
-            className={selectedFields.length === 0 ?
-              `${prefix}-data-table-content-table-disabled-icon`
-              : `${prefix}-data-table-content-table-normal-icon`}
-            type="fa-minus"
-          />
-          <Icon
-            onClick={() => this._importField(fields, key)}
-            className={`${prefix}-data-table-content-table-normal-icon`}
-            type="fa-plus"
-          />
-        </div>
-        <div className='pdman-table-index-config-right-list'>
-          <table
-            style={{minWidth: 200}}
-            tabIndex="0"
-            className={`${prefix}-data-table-content-table`}
-          >
-            <tbody>
-              <tr className={`${prefix}-data-table-content-table-first-tr`}><th>{}</th><th>代码</th><th>名称</th></tr>
-              {
-                fields
-                  .map((f, index) => (
-                    <tr
-                      onClick={e => this._trClick(e, f.name, 'fields')}
-                      draggable
-                      onDragStart={e => this._onDragStart(e, index, 'fields')}
-                      onDrop={e => this._onDrop(e, index, 'fields', key)}
-                      onDragOver={this._onDragOver}
-                      className={`${prefix}-data-table-content-table-normal-tr
-                        ${selectedFields.some(tr => tr === f.name) ?
-                        `${prefix}-data-table-content-table-selected-tr` :
-                        `${prefix}-data-table-content-table-unselected-tr`}`}
-                      key={f.key}
-                    >
-                      <th style={{width: 35, userSelect: 'none'}}>{index + 1}</th>
-                      <th><span>{f.name}</span></th><th><span>{f.chnname}</span></th>
-                    </tr>
-                    ),
-                  )
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>);
+    );
   }
 }

@@ -16,20 +16,15 @@ const openModal = (component, params = {}) => {
   };
   const _onOk = () => {
     const { onOk } = params;
-    onOk && onOk({close: _close}, comInstance);
+    onOk && onOk({ close: _close }, comInstance);
   };
 
   class ModalWrapper extends React.Component {
     render() {
       return (
-        <Modal
-          {...params}
-          visible
-          onCancel={_close}
-          onOk={_onOk}
-        >
+        <Modal {...params} visible onCancel={_close} onOk={_onOk}>
           {React.cloneElement(component, {
-            ref: instance => comInstance = instance,
+            ref: instance => (comInstance = instance),
             onCancel: _close,
           })}
         </Modal>
@@ -37,10 +32,7 @@ const openModal = (component, params = {}) => {
     }
   }
 
-  ReactDOM.render(
-    React.createElement(ModalWrapper),
-    maskDiv,
-  );
+  ReactDOM.render(React.createElement(ModalWrapper), maskDiv);
   return {
     close: _close,
     com: comInstance,

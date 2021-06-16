@@ -11,7 +11,6 @@ const selectTextColor = '#FFFFFF';
 const defaultTextColor = '#000000';
 
 class TreeNode extends React.Component {
-
   constructor(props) {
     super(props);
     this.state = {
@@ -22,16 +21,19 @@ class TreeNode extends React.Component {
       display: 'none',
       color: {
         textColor: defaultTextColor,
-        backgroundColor: defaultColor
-      }
+        backgroundColor: defaultColor,
+      },
     };
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    return ((nextState.color.backgroundColor !== this.state.color.backgroundColor)
-      || (nextState.rotate !== this.state.rotate) || (nextState.display !== this.state.display)
-      || this._validateChildren(nextProps))
-      || this._validateSearchValue(nextProps);
+    return (
+      nextState.color.backgroundColor !== this.state.color.backgroundColor ||
+      nextState.rotate !== this.state.rotate ||
+      nextState.display !== this.state.display ||
+      this._validateChildren(nextProps) ||
+      this._validateSearchValue(nextProps)
+    );
   }
 
   componentWillReceiveProps(nextProps) {
@@ -39,30 +41,35 @@ class TreeNode extends React.Component {
       this.setState({
         color: {
           textColor: defaultTextColor,
-          backgroundColor: blurColor
-        }
+          backgroundColor: blurColor,
+        },
       });
     } else if (nextProps.checked.includes(this.props.value)) {
       this.setState({
         color: {
           textColor: selectTextColor,
-          backgroundColor: selectColor
-        }
+          backgroundColor: selectColor,
+        },
       });
     } else {
       this.setState({
         color: {
           textColor: defaultTextColor,
-          backgroundColor: defaultColor
-        }
+          backgroundColor: defaultColor,
+        },
       });
     }
     const { searchValue } = nextProps;
     const childrenValue = nextProps.childrenValue
-      .filter(c => c && !c.startsWith('map&') && !c.startsWith('table&'))
-      .map(c => (c.split('&')[2] || c).toLocaleLowerCase());
+      .filter((c) => c && !c.startsWith('map&') && !c.startsWith('table&'))
+      .map((c) => (c.split('&')[2] || c).toLocaleLowerCase());
     if (searchValue !== this.props.searchValue) {
-      if (searchValue && childrenValue.some(c => c && c.includes(searchValue.toLocaleLowerCase()))) {
+      if (
+        searchValue &&
+        childrenValue.some(
+          (c) => c && c.includes(searchValue.toLocaleLowerCase())
+        )
+      ) {
         this.setState({
           rotate: 'rotate(90deg)',
           display: '',
@@ -78,18 +85,31 @@ class TreeNode extends React.Component {
   _validateSearchValue = (nextProps) => {
     if (nextProps.searchValue !== this.props.searchValue) {
       const childrenValue = nextProps.childrenValue
-        .filter(c => c && !c.startsWith('map&') && !c.startsWith('table&'))
-        .map(c => (c.split('&')[2] || c).toLocaleLowerCase());
-      const children = _object.get(nextProps, 'name.props.children', []).map(c => {
-        if (typeof c === 'string') {
-          return c.toLocaleLowerCase();
-        }
-        return c;
-      });
-      const flag = ((nextProps.searchValue && childrenValue.some(c => c && c.includes(nextProps.searchValue.toLocaleLowerCase())))
-        || (nextProps.searchValue && children[1] && children[1].includes(nextProps.searchValue.toLocaleLowerCase()))
-        || (this.props.searchValue && childrenValue.some(c => c && c.includes(this.props.searchValue.toLocaleLowerCase())))
-        || (this.props.searchValue && children[1] && children[1].includes(this.props.searchValue.toLocaleLowerCase())));
+        .filter((c) => c && !c.startsWith('map&') && !c.startsWith('table&'))
+        .map((c) => (c.split('&')[2] || c).toLocaleLowerCase());
+      const children = _object
+        .get(nextProps, 'name.props.children', [])
+        .map((c) => {
+          if (typeof c === 'string') {
+            return c.toLocaleLowerCase();
+          }
+          return c;
+        });
+      const flag =
+        (nextProps.searchValue &&
+          childrenValue.some(
+            (c) => c && c.includes(nextProps.searchValue.toLocaleLowerCase())
+          )) ||
+        (nextProps.searchValue &&
+          children[1] &&
+          children[1].includes(nextProps.searchValue.toLocaleLowerCase())) ||
+        (this.props.searchValue &&
+          childrenValue.some(
+            (c) => c && c.includes(this.props.searchValue.toLocaleLowerCase())
+          )) ||
+        (this.props.searchValue &&
+          children[1] &&
+          children[1].includes(this.props.searchValue.toLocaleLowerCase()));
       return !!flag;
     }
     return false;
@@ -98,15 +118,22 @@ class TreeNode extends React.Component {
     // 校验子节点的数据是否发生了变化
     const { childrenValue } = this.props;
     const nextChildrenValue = nextProps.childrenValue;
-    return (childrenValue.length !== nextChildrenValue.length) ||
-      childrenValue.some((value, index) => value !== nextChildrenValue[index])
-      || this._checkChildrenChange(nextProps) || (this.props.realName !== nextProps.realName);
+    return (
+      childrenValue.length !== nextChildrenValue.length ||
+      childrenValue.some(
+        (value, index) => value !== nextChildrenValue[index]
+      ) ||
+      this._checkChildrenChange(nextProps) ||
+      this.props.realName !== nextProps.realName
+    );
   };
 
   _checkChildrenChange = (nextProps) => {
     const { childrenValue, cancelChecked, checked } = nextProps;
-    const checkChildren = childrenValue.some(v => checked.includes(v));
-    const cancelCheckedChildren = childrenValue.some(v => cancelChecked.includes(v));
+    const checkChildren = childrenValue.some((v) => checked.includes(v));
+    const cancelCheckedChildren = childrenValue.some((v) =>
+      cancelChecked.includes(v)
+    );
     return checkChildren || cancelCheckedChildren;
   };
 
@@ -120,54 +147,79 @@ class TreeNode extends React.Component {
     rightIconOnClick && rightIconOnClick(e, value, child);
     const { display } = this.state;
     this.setState({
-      rotate: this.state.rotate === 'rotate(90deg)' ? 'rotate(0deg)' : 'rotate(90deg)',
-      display: (display === undefined || display === '') ? 'none' : '',
+      rotate:
+        this.state.rotate === 'rotate(90deg)'
+          ? 'rotate(0deg)'
+          : 'rotate(90deg)',
+      display: display === undefined || display === '' ? 'none' : '',
     });
   };
 
   _getTreeValue = (name, value, hasChild, row) => {
     if (hasChild) {
-      return (<span
-        style={{ padding: this.state.padding, paddingLeft: (row * (this.state.iconWidth + 5)) + 5 }}
-      >
-        <Icon
-          type="right"
-          onClick={(e) => this._rightIconOnClick(e, value, hasChild)}
-          onDoubleClick={this._rightIconOnDoubleClick}
-          style={{
-            verticalAlign: 'middle',
-            transform: this.state.rotate
-          }}
-        />
-        <Icon type="fa-folder" style={{ verticalAlign: 'middle', marginLeft: 5, color: '#FFAC33' }} />
+      return (
         <span
           style={{
             padding: this.state.padding,
-            color: this.state.color.textColor,
-            verticalAlign: 'middle' }}
-        >{name}</span>
-      </span>);
+            paddingLeft: row * (this.state.iconWidth + 5) + 5,
+          }}
+        >
+          <Icon
+            type='right'
+            onClick={(e) => this._rightIconOnClick(e, value, hasChild)}
+            onDoubleClick={this._rightIconOnDoubleClick}
+            style={{
+              verticalAlign: 'middle',
+              transform: this.state.rotate,
+            }}
+          />
+          <Icon
+            type='fa-folder'
+            style={{ verticalAlign: 'middle', marginLeft: 5, color: '#FFAC33' }}
+          />
+          <span
+            style={{
+              padding: this.state.padding,
+              color: this.state.color.textColor,
+              verticalAlign: 'middle',
+            }}
+          >
+            {name}
+          </span>
+        </span>
+      );
     }
-    const children = _object.get(this.props, 'name.props.children', [])
-      .map(c => {
+    const children = _object
+      .get(this.props, 'name.props.children', [])
+      .map((c) => {
         if (typeof c === 'string') {
           return c.toLocaleLowerCase();
         }
         return c;
       });
-    return (<span
-      style={{ padding: this.state.padding, paddingLeft: (row * (this.state.iconWidth + 5)) + 5 }}
-    >
+    return (
       <span
         style={{
           padding: this.state.padding,
-          color: (this.props.searchValue && children[1] && children[1].includes(this.props.searchValue.toLocaleLowerCase())) ?
-            'red': this.state.color.textColor,
-          verticalAlign: 'middle'
+          paddingLeft: row * (this.state.iconWidth + 5) + 5,
         }}
-      >{name}
+      >
+        <span
+          style={{
+            padding: this.state.padding,
+            color:
+              this.props.searchValue &&
+              children[1] &&
+              children[1].includes(this.props.searchValue.toLocaleLowerCase())
+                ? 'red'
+                : this.state.color.textColor,
+            verticalAlign: 'middle',
+          }}
+        >
+          {name}
+        </span>
       </span>
-    </span>);
+    );
   };
 
   _onContextMenu = (e, value) => {
@@ -196,7 +248,10 @@ class TreeNode extends React.Component {
     const { onDoubleClick } = this.props;
     if (children) {
       this.setState({
-        rotate: this.state.rotate === 'rotate(90deg)' ? 'rotate(0deg)' : 'rotate(90deg)'
+        rotate:
+          this.state.rotate === 'rotate(90deg)'
+            ? 'rotate(0deg)'
+            : 'rotate(90deg)',
       });
     }
     onDoubleClick && onDoubleClick(value, children);
@@ -217,10 +272,10 @@ class TreeNode extends React.Component {
   };
   _onDragStart = (e, value) => {
     e.stopPropagation();
-    e.dataTransfer.setData("Text", value);
+    e.dataTransfer.setData('Text', value);
   };
   _getRender = (show, value, children, name, row, draggable) => {
-    return (children && [].concat(children).length > 0 ?
+    return children && [].concat(children).length > 0 ? (
       <ul
         id={value}
         draggable={draggable}
@@ -230,17 +285,16 @@ class TreeNode extends React.Component {
         onContextMenu={(e) => this._onContextMenu(e, value)}
         style={{
           backgroundColor: this.state.color.backgroundColor,
-          cursor: 'default'
+          cursor: 'default',
         }}
         key={value}
         onClick={(e) => this._onClick(e, value)}
         onDoubleClick={(e) => this._onDoubleClick(e, value, children)}
       >
         <span>{this._getTreeValue(name, value, children, row)}</span>
-        <div style={{ display: this.state.display }}>
-          { children }
-        </div>
-      </ul> :
+        <div style={{ display: this.state.display }}>{children}</div>
+      </ul>
+    ) : (
       <li
         id={value}
         draggable={true}
@@ -257,7 +311,8 @@ class TreeNode extends React.Component {
         onClick={(e) => this._onClick(e, value)}
         onDoubleClick={(e) => this._onDoubleClick(e, value, children)}
       >
-        {this._getTreeValue(name, value, false, row)}</li>
+        {this._getTreeValue(name, value, false, row)}
+      </li>
     );
   };
 

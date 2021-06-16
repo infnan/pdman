@@ -1,11 +1,11 @@
 import React from 'react';
 
-export default class SimpleTabPane extends React.Component{
-  shouldComponentUpdate(){
+export default class SimpleTabPane extends React.Component {
+  shouldComponentUpdate() {
     return false;
   }
-  render(){
+  render() {
     const { children } = this.props;
-    return (<div>{children}</div>);
+    return <div>{children}</div>;
   }
 }

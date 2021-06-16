@@ -3,7 +3,7 @@ import React from 'react';
 import './style/index.less';
 import { uuid } from '../../utils/uuid';
 
-export default class Radio extends React.Component{
+export default class Radio extends React.Component {
   _onChange = () => {
     const { onChange, value } = this.props;
     onChange && onChange(value);
@@ -21,21 +21,27 @@ export default class Radio extends React.Component{
     e.preventDefault();
     e.stopPropagation();
   };
-  render(){
-    const { prefix = 'pdman',
-      style, wrapperStyle, groupValue, value,
-      title, disabled = false, children, name = uuid(), radioStyle = {} } = this.props;
+  render() {
+    const {
+      prefix = 'pdman',
+      style,
+      wrapperStyle,
+      groupValue,
+      value,
+      title,
+      disabled = false,
+      children,
+      name = uuid(),
+      radioStyle = {},
+    } = this.props;
     return (
-      <div style={{display: 'flex', ...radioStyle}}>
-        <div
-          className={`${prefix}-radio-wrapper`}
-          style={wrapperStyle}
-        >
+      <div style={{ display: 'flex', ...radioStyle }}>
+        <div className={`${prefix}-radio-wrapper`} style={wrapperStyle}>
           <input
             disabled={disabled}
             draggable
             onDragStart={this._onDragStart}
-            type="radio"
+            type='radio'
             onBlur={this._onBlur}
             className={`${prefix}-radio`}
             onChange={this._onChange}
@@ -47,6 +53,7 @@ export default class Radio extends React.Component{
           />
         </div>
         {children}
-      </div>);
+      </div>
+    );
   }
 }

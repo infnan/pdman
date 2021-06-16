@@ -6,7 +6,7 @@ import * as DataTypeUtils from './DataTypeUtils';
 
 import './style/index.less';
 
-export default class DataType extends React.Component{
+export default class DataType extends React.Component {
   static DataTypeUtils = DataTypeUtils;
   _validate = (data) => {
     const { validate, dataSource, value = {} } = this.props;
@@ -16,8 +16,12 @@ export default class DataType extends React.Component{
       const code = data.code || value.code;
       let codeflag = true;
       let nameflag = true;
-      if (!code || (dataTypes.map(dataType => dataType.code))
-        .some(dataTypeCode => (dataTypeCode === code) && (value.code !== code))) {
+      if (
+        !code ||
+        dataTypes
+          .map(dataType => dataType.code)
+          .some(dataTypeCode => dataTypeCode === code && value.code !== code)
+      ) {
         codeflag = false;
         this.status = {
           ...(this.status || {}),
@@ -30,8 +34,12 @@ export default class DataType extends React.Component{
           codeMessage: '',
         };
       }
-      if (!name || dataTypes.map(dataType => dataType.name)
-        .some(dataTypeName => (dataTypeName === name) && (value.name !== name))) {
+      if (
+        !name ||
+        dataTypes
+          .map(dataType => dataType.name)
+          .some(dataTypeName => dataTypeName === name && value.name !== name)
+      ) {
         nameflag = false;
         this.status = {
           ...(this.status || {}),
@@ -73,56 +81,77 @@ export default class DataType extends React.Component{
   };
   render() {
     const { dataSource, prefix = 'pdman', value = {} } = this.props;
-    return (<div className={`${prefix}-data-type-wrapper`}>
-      <div className={`${prefix}-data-type-wrapper-item`}>
-        <div className={`${prefix}-data-type-wrapper-item-content`}>
-          <div className={`${prefix}-data-type-wrapper-item-label`}>名称:</div>
-          <div className={`${prefix}-data-type-wrapper-item-component`}>
-            <Input
-              style={{width: '100%'}}
-              onChange={e => this._onChange(e, 'name')}
-              defaultValue={value.name}
-            />
+    return (
+      <div className={`${prefix}-data-type-wrapper`}>
+        <div className={`${prefix}-data-type-wrapper-item`}>
+          <div className={`${prefix}-data-type-wrapper-item-content`}>
+            <div className={`${prefix}-data-type-wrapper-item-label`}>
+              名称:
+            </div>
+            <div className={`${prefix}-data-type-wrapper-item-component`}>
+              <Input
+                style={{ width: '100%' }}
+                onChange={e => this._onChange(e, 'name')}
+                defaultValue={value.name}
+              />
+            </div>
+          </div>
+          <div className={`${prefix}-data-type-wrapper-item-message`}>
+            <span>{this.state && this.state.nameMessage}</span>
           </div>
         </div>
-        <div className={`${prefix}-data-type-wrapper-item-message`}>
-          <span>{this.state && this.state.nameMessage}</span>
-        </div>
-      </div>
-      <div className={`${prefix}-data-type-wrapper-item`}>
-        <div className={`${prefix}-data-type-wrapper-item-content`}>
-          <div className={`${prefix}-data-type-wrapper-item-label`}>代码:</div>
-          <div className={`${prefix}-data-type-wrapper-item-component`}>
-            <Input
-              style={{width: '100%'}}
-              onChange={e => this._onChange(e, 'code')}
-              defaultValue={value.code}
-            />
+        <div className={`${prefix}-data-type-wrapper-item`}>
+          <div className={`${prefix}-data-type-wrapper-item-content`}>
+            <div className={`${prefix}-data-type-wrapper-item-label`}>
+              代码:
+            </div>
+            <div className={`${prefix}-data-type-wrapper-item-component`}>
+              <Input
+                style={{ width: '100%' }}
+                onChange={e => this._onChange(e, 'code')}
+                defaultValue={value.code}
+              />
+            </div>
+          </div>
+          <div className={`${prefix}-data-type-wrapper-item-message`}>
+            <span>{this.state && this.state.codeMessage}</span>
           </div>
         </div>
-        <div className={`${prefix}-data-type-wrapper-item-message`}>
-          <span>{this.state && this.state.codeMessage}</span>
+        <div className={`${prefix}-data-type-wrapper-item-group`}>
+          <div className={`${prefix}-data-type-wrapper-item-group-label`}>
+            数据库对应类型
+          </div>
+          <div>
+            {_object
+              .get(dataSource, 'dataTypeDomains.database', [])
+              .map((database) => {
+                return (
+                  <div
+                    className={`${prefix}-data-type-wrapper-item-content ${prefix}-data-type-wrapper-item-group-content`}
+                    key={database.code}
+                  >
+                    <div
+                      className={`${prefix}-data-type-wrapper-item-label`}
+                    >{`${database.code}:`}</div>
+                    <div
+                      className={`${prefix}-data-type-wrapper-item-component`}
+                    >
+                      <Input
+                        style={{ width: '100%' }}
+                        onChange={e => this._onChange(e, null, database.code)}
+                        defaultValue={_object.get(
+                          value,
+                          `apply.${database.code}.type`,
+                          '',
+                        )}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </div>
       </div>
-      <div className={`${prefix}-data-type-wrapper-item-group`}>
-        <div className={`${prefix}-data-type-wrapper-item-group-label`}>数据库对应类型</div>
-        <div>
-          {_object.get(dataSource, 'dataTypeDomains.database', []).map((database) => {
-            return (<div
-              className={`${prefix}-data-type-wrapper-item-content ${prefix}-data-type-wrapper-item-group-content`}
-              key={database.code}
-            >
-              <div className={`${prefix}-data-type-wrapper-item-label`}>{`${database.code}:`}</div>
-              <div className={`${prefix}-data-type-wrapper-item-component`}>
-                <Input
-                  style={{width: '100%'}}
-                  onChange={e => this._onChange(e, null, database.code)}
-                  defaultValue={_object.get(value, `apply.${database.code}.type`, '')}
-                />
-              </div></div>);
-          })}
-        </div>
-      </div>
-    </div>);
+    );
   }
 }

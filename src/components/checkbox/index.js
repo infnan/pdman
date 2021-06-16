@@ -2,16 +2,17 @@ import React from 'react';
 
 import './style/index.less';
 
-export default class Checkbox extends React.Component{
+export default class Checkbox extends React.Component {
   _onChange = (e) => {
     const { onChange } = this.props;
-    onChange && onChange({
-      ...e,
-      target: {
-        ...e.target,
-        value: e.target.checked,
-      },
-    });
+    onChange &&
+      onChange({
+        ...e,
+        target: {
+          ...e.target,
+          value: e.target.checked,
+        },
+      });
   };
   _onBlur = (e) => {
     const { onBlur } = this.props;
@@ -27,22 +28,31 @@ export default class Checkbox extends React.Component{
     e.stopPropagation();
   };
   render() {
-    const { prefix = 'pdman', style, wrapperStyle, value = false, title, disabled = false } = this.props;
-    return (<div className={`${prefix}-checkbox-wrapper`}  style={wrapperStyle}>
-      <input
-        disabled={disabled}
-        draggable
-        onDragStart={this._onDragStart}
-        type="checkbox"
-        onBlur={this._onBlur}
-        className={`${prefix}-checkbox`}
-        onChange={this._onChange}
-        style={style}
-        onClick={this._onClick}
-        value={value}
-        checked={value}
-        title={title}
-      />
-    </div>);
+    const {
+      prefix = 'pdman',
+      style,
+      wrapperStyle,
+      value = false,
+      title,
+      disabled = false,
+    } = this.props;
+    return (
+      <div className={`${prefix}-checkbox-wrapper`} style={wrapperStyle}>
+        <input
+          disabled={disabled}
+          draggable
+          onDragStart={this._onDragStart}
+          type='checkbox'
+          onBlur={this._onBlur}
+          className={`${prefix}-checkbox`}
+          onChange={this._onChange}
+          style={style}
+          onClick={this._onClick}
+          value={value}
+          checked={value}
+          title={title}
+        />
+      </div>
+    );
   }
 }

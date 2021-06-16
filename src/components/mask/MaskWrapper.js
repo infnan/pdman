@@ -14,9 +14,7 @@ const openMask = (component) => {
   class MaskWrapper extends React.Component {
     render() {
       return (
-        <Mask
-          visible
-        >
+        <Mask visible>
           {React.cloneElement(component, {
             onCancel: _close,
           })}
@@ -25,10 +23,7 @@ const openMask = (component) => {
     }
   }
 
-  ReactDOM.render(
-    <MaskWrapper/>,
-    maskDiv,
-  );
+  ReactDOM.render(<MaskWrapper />, maskDiv);
   return {
     close: _close,
   };

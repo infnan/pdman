@@ -5,20 +5,22 @@ import * as Com from '../../../components';
 import { moveArrayPosition } from '../../../utils/array';
 
 // 将列表的行单独做成一个组件，便于渲染判断
-export default class TableRow extends React.Component{
-  shouldComponentUpdate(nextProps){
+export default class TableRow extends React.Component {
+  shouldComponentUpdate(nextProps) {
     // 列表行渲染判断
     // 1.该行数据是否发生改变
     // 2.该数据表头顺序是否该表
     // 3.选中行是否发生改变
     // 4.全局数据类型发生改变【columnOrder = [], dataTypes = []】
     // 5.表格行发生改变
-    return (nextProps.field !== this.props.field)
-      || (nextProps.headers !== this.props.headers)
-      || this._checkSelected(nextProps)
-      || nextProps.columnOrder !== this.props.columnOrder
-      || nextProps.dataTypes !== this.props.dataTypes
-      || nextProps.index !== this.props.index;
+    return (
+      nextProps.field !== this.props.field ||
+      nextProps.headers !== this.props.headers ||
+      this._checkSelected(nextProps) ||
+      nextProps.columnOrder !== this.props.columnOrder ||
+      nextProps.dataTypes !== this.props.dataTypes ||
+      nextProps.index !== this.props.index
+    );
   }
   _checkSelected = (nextProps) => {
     const key = nextProps.field.key;
@@ -40,9 +42,11 @@ export default class TableRow extends React.Component{
     const { updateSelectedTrs, selectedTrs } = this.props;
     let tempSelectedTrs = [...selectedTrs];
     if (tempSelectedTrs.some(tr => tr === key)) {
-      tempSelectedTrs = e.shiftKey ? tempSelectedTrs.filter(tr => tr !== key) : [];
+      tempSelectedTrs = e.shiftKey
+        ? tempSelectedTrs.filter(tr => tr !== key)
+        : [];
     } else {
-      e.shiftKey ? tempSelectedTrs.push(key) : tempSelectedTrs = [key];
+      e.shiftKey ? tempSelectedTrs.push(key) : (tempSelectedTrs = [key]);
     }
     updateSelectedTrs && updateSelectedTrs(tempSelectedTrs);
   };
@@ -54,10 +58,11 @@ export default class TableRow extends React.Component{
     e.preventDefault();
     const data = e.dataTransfer.getData('Text');
     const { dataTable, saveData } = this.props;
-    saveData && saveData({
-      ...dataTable,
-      fields: moveArrayPosition(dataTable.fields, data, index),
-    });
+    saveData &&
+      saveData({
+        ...dataTable,
+        fields: moveArrayPosition(dataTable.fields, data, index),
+      });
   };
   _onDragOver = (e) => {
     e.preventDefault();
@@ -67,9 +72,19 @@ export default class TableRow extends React.Component{
     relationNoShowClick && relationNoShowClick(e, key, code, value);
   };
   render() {
-    const { prefix = 'pdman', field, index, selectedTrs = [],
-      headers, columnOrder, dataTypes, setInputInstance,
-      inputOnChange, updateInputPosition, dataSource } = this.props;
+    const {
+      prefix = 'pdman',
+      field,
+      index,
+      selectedTrs = [],
+      headers,
+      columnOrder,
+      dataTypes,
+      setInputInstance,
+      inputOnChange,
+      updateInputPosition,
+      dataSource,
+    } = this.props;
     return (
       <tr
         onClick={e => this._trClick(e, field.key)}
@@ -78,30 +93,40 @@ export default class TableRow extends React.Component{
         onDrop={e => this._onDrop(e, index)}
         onDragOver={this._onDragOver}
         className={`${prefix}-data-table-content-table-normal-tr
-                      ${selectedTrs.some(tr => tr === field.key) ?
-          `${prefix}-data-table-content-table-selected-tr` :
-          `${prefix}-data-table-content-table-unselected-tr`}`}
+                      ${
+                        selectedTrs.some(tr => tr === field.key)
+                          ? `${prefix}-data-table-content-table-selected-tr`
+                          : `${prefix}-data-table-content-table-unselected-tr`
+                      }`}
         key={field.key}
       >
-        <th style={{width: 35, userSelect: 'none'}}>{index + 1}</th>
-        {
-          headers.map((header, rowIndex) => {
-            const column = columnOrder.filter(c => c.code === header.fieldName)[0];
-            const ThCom = Com[column.com || 'Input'] || Com.Input;
-            if (column.com === 'Icon') {
-              return (
-                <th key={`${column.code}-${field.key}`}>
-                  <ThCom
-                    style={{cursor: 'pointer'}}
-                    type={field[column.code] ? 'fa-eye-slash' : 'fa-eye'}
-                    onClick={e => this._relationNoShowClick(e,
-                      field.key, column.code, !field[column.code])}
-                    title='是否在关系图中显示'
-                  />
-                </th>
-              );
-            }
-            return (<TableCell
+        <th style={{ width: 35, userSelect: 'none' }}>{index + 1}</th>
+        {headers.map((header, rowIndex) => {
+          const column = columnOrder.filter(
+            c => c.code === header.fieldName,
+          )[0];
+          const ThCom = Com[column.com || 'Input'] || Com.Input;
+          if (column.com === 'Icon') {
+            return (
+              <th key={`${column.code}-${field.key}`}>
+                <ThCom
+                  style={{ cursor: 'pointer' }}
+                  type={field[column.code] ? 'fa-eye-slash' : 'fa-eye'}
+                  onClick={e =>
+                    this._relationNoShowClick(
+                      e,
+                      field.key,
+                      column.code,
+                      !field[column.code],
+                    )
+                  }
+                  title='是否在关系图中显示'
+                />
+              </th>
+            );
+          }
+          return (
+            <TableCell
               key={`${column.code}-${field.key}`}
               rowIndex={rowIndex}
               column={column}
@@ -113,9 +138,9 @@ export default class TableRow extends React.Component{
               inputOnChange={inputOnChange}
               updateInputPosition={updateInputPosition}
               dataSource={dataSource}
-            />);
-          })
-        }
+            />
+          );
+        })}
       </tr>
     );
   }

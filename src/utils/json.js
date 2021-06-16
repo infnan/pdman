@@ -77,7 +77,6 @@ function readFileCall(filePath, callBack) {
   });
 }
 
-
 // 同步保存json文件
 function saveFileSync(jsonObj, filePath) {
   try {
@@ -92,7 +91,8 @@ function saveFileSync(jsonObj, filePath) {
 function saveFilePromise(jsonObj, filePath) {
   return new Promise((resolve, reject) => {
     const hashSave = crypto.createHash('md5');
-    const saveString = typeof jsonObj !== 'string' ? JSON.stringify(jsonObj, null, 2) : jsonObj;
+    const saveString =
+      typeof jsonObj !== 'string' ? JSON.stringify(jsonObj, null, 2) : jsonObj;
     hashSave.update(saveString);
     const hashSaveData = hashSave.digest('hex');
     if (saveString) {
@@ -160,32 +160,36 @@ function fileExistPromise(filePath, isCreate, obj, file = '.json') {
       if (!status) {
         if (isCreate) {
           const parent = path.dirname(filePath);
-          fileExistPromise(parent, isCreate).then(() => {
-            if (filePath.endsWith(file)) {
-              saveFilePromise(obj, filePath).then(resolve).catch(reject);
-            } else {
-              fs.mkdir(filePath, (parentErr) => {
+          fileExistPromise(parent, isCreate)
+            .then(() => {
+              if (filePath.endsWith(file)) {
+                saveFilePromise(obj, filePath).then(resolve).catch(reject);
+              } else {
+                fs.mkdir(filePath, (parentErr) => {
+                  if (parentErr) {
+                    reject(parentErr);
+                  }
+                  resolve(filePath);
+                });
+              }
+            })
+            .catch(() => {
+              fs.mkdir(parent, (parentErr) => {
                 if (parentErr) {
                   reject(parentErr);
                 }
                 resolve(filePath);
               });
-            }
-          }).catch(() => {
-            fs.mkdir(parent, (parentErr) => {
-              if (parentErr) {
-                reject(parentErr);
-              }
-              resolve(filePath);
             });
-          });
         } else {
           reject(status);
         }
-      } else if(filePath.endsWith(file)){
-        saveFilePromise(obj, filePath).then(resolve).catch((err) => {
-          reject(err);
-        });
+      } else if (filePath.endsWith(file)) {
+        saveFilePromise(obj, filePath)
+          .then(resolve)
+          .catch((err) => {
+            reject(err);
+          });
       } else {
         resolve(filePath);
       }
@@ -207,67 +211,79 @@ function checkFileExistPromise(filePath) {
 
 function deleteDirPromise(dir) {
   return new Promise((resolve, reject) => {
-    checkFileExistPromise(dir).then(() => {
-      fs.readdir(dir, (errs, files) => {
-        if (errs) {
-          reject(errs);
-        } else {
-          Promise.all(files.map((file) => {
-            return new Promise((res, rej) => {
-              const curPath = `${dir}/${file}`;
-              fs.stat(curPath, (err, stat) => {
-                if (err) {
-                  rej(err);
-                } else if (stat.isDirectory()) {
-                  deleteDirPromise(curPath).then(() => {
-                    res(curPath);
-                  }).catch((dirErr) => {
-                    rej(dirErr);
-                  });
-                } else {
-                  fs.unlink(curPath, (fileErr) => {
-                    if (fileErr) {
-                      rej(fileErr);
+    checkFileExistPromise(dir)
+      .then(() => {
+        fs.readdir(dir, (errs, files) => {
+          if (errs) {
+            reject(errs);
+          } else {
+            Promise.all(
+              files.map((file) => {
+                return new Promise((res, rej) => {
+                  const curPath = `${dir}/${file}`;
+                  fs.stat(curPath, (err, stat) => {
+                    if (err) {
+                      rej(err);
+                    } else if (stat.isDirectory()) {
+                      deleteDirPromise(curPath)
+                        .then(() => {
+                          res(curPath);
+                        })
+                        .catch((dirErr) => {
+                          rej(dirErr);
+                        });
                     } else {
-                      res(curPath);
+                      fs.unlink(curPath, (fileErr) => {
+                        if (fileErr) {
+                          rej(fileErr);
+                        } else {
+                          res(curPath);
+                        }
+                      });
                     }
                   });
-                }
-              });
-            });
-          })).then(() => {
-            fs.rmdir(dir, (err) => {
-              if (err) {
+                });
+              }),
+            )
+              .then(() => {
+                fs.rmdir(dir, (err) => {
+                  if (err) {
+                    reject(err);
+                  } else {
+                    resolve(dir);
+                  }
+                });
+              })
+              .catch((err) => {
                 reject(err);
-              } else {
-                resolve(dir);
-              }
-            });
-          }).catch((err) => {
-            reject(err);
-          });
-        }
-      });
-    }).catch(err => reject(err));
+              });
+          }
+        });
+      })
+      .catch(err => reject(err));
   });
 }
 
 function getDirListPromise(dir, baseName) {
   return new Promise((resolve, reject) => {
-    checkFileExistPromise(dir).then(() => {
-      fs.readdir(dir, (errs, files) => {
-        if (errs) {
-          reject(errs);
-        } else {
-          resolve(files.map((file) => {
-            if (baseName) {
-              return path.basename(file);
-            }
-            return file;
-          }));
-        }
-      });
-    }).catch(err => reject(err));
+    checkFileExistPromise(dir)
+      .then(() => {
+        fs.readdir(dir, (errs, files) => {
+          if (errs) {
+            reject(errs);
+          } else {
+            resolve(
+              files.map((file) => {
+                if (baseName) {
+                  return path.basename(file);
+                }
+                return file;
+              }),
+            );
+          }
+        });
+      })
+      .catch(err => reject(err));
   });
 }
 
@@ -286,9 +302,9 @@ function getDirNamePromise(filePath) {
 function readFile(file) {
   return new Promise((res, rej) => {
     fs.readFile(file, (err, data) => {
-      if(err){
+      if (err) {
         rej(err);
-      }else{
+      } else {
         res(data);
       }
     });
@@ -298,9 +314,9 @@ function readFile(file) {
 function writeFile(file, dataBuffer) {
   return new Promise((res, rej) => {
     fs.writeFile(file, dataBuffer, (err) => {
-      if(err){
+      if (err) {
         rej(err);
-      }else{
+      } else {
         res(file);
       }
     });

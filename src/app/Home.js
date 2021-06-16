@@ -4,10 +4,17 @@ import electron from 'electron';
 import _object from 'lodash/object';
 import defaultData from './defaultData';
 import './style/home.less';
-import {Icon, Modal, openModal, Button, Message} from '../components';
+import { Icon, Modal, openModal, Button, Message } from '../components';
 import Header from './Header';
 import CreatePro from './CreatePro';
-import {fileExist, fileExistPromise, readFilePromise, saveFilePromise, writeFile, readFile } from '../utils/json';
+import {
+  fileExist,
+  fileExistPromise,
+  readFilePromise,
+  saveFilePromise,
+  writeFile,
+  readFile,
+} from '../utils/json';
 import defaultConfig from '../../profile';
 import App from './index';
 import demo from '../demo';
@@ -17,8 +24,8 @@ import { compareStringVersion } from '../utils/string';
 const { ipcRenderer, shell } = electron;
 const { app, dialog } = electron.remote;
 
-export default class Home extends React.Component{
-  constructor(props){
+export default class Home extends React.Component {
+  constructor(props) {
     super(props);
     this.projectName = '';
     this.split = process.platform === 'win32' ? '\\' : '/';
@@ -40,7 +47,7 @@ export default class Home extends React.Component{
       register: {},
     };
   }
-  componentDidMount(){
+  componentDidMount() {
     // 设置快捷方式
     this.dom = ReactDom.findDOMNode(this.instance);
     this.dom && this.dom.focus();
@@ -65,37 +72,47 @@ export default class Home extends React.Component{
           };
           modal = openModal(
             <div>
-              <div style={{textAlign: 'center'}}>
-                {newData.forceUpdate ?
-                  '新版为强制更新版本，请及时更新新版，当前版本将停止使用！关闭此弹窗将关闭当前应用！' : ''}
+              <div style={{ textAlign: 'center' }}>
+                {newData.forceUpdate
+                  ? '新版为强制更新版本，请及时更新新版，当前版本将停止使用！关闭此弹窗将关闭当前应用！'
+                  : ''}
               </div>
-              <div style={{display: 'flex'}}>
+              <div style={{ display: 'flex' }}>
                 <div>下载地址：</div>
-                <div  style={{textAlign: 'left'}}>
-                  {Object.keys(newData.downloadURL || {})
-                    .map(type => (<div
+                <div style={{ textAlign: 'left' }}>
+                  {Object.keys(newData.downloadURL || {}).map(type => (
+                    <div
                       key={type}
                       title='点击下载'
-                      style={{userSelect: 'text'}}
+                      style={{ userSelect: 'text' }}
                     >
                       <span>{type}:</span>
                       <a
-                        style={{marginLeft: 5}}
+                        style={{ marginLeft: 5 }}
                         onClick={() => this._openUrl(newData.downloadURL[type])}
-                      >{newData.downloadURL[type]}</a>
-                    </div>))}
+                      >
+                        {newData.downloadURL[type]}
+                      </a>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div style={{display: 'flex'}}>
+              <div style={{ display: 'flex' }}>
                 <div>更新内容：</div>
                 <div>
-                  {(newData.leaseLog || []).map(log => (<div key={log}>{log}</div>))}
+                  {(newData.leaseLog || []).map(log => (
+                    <div key={log}>{log}</div>
+                  ))}
                 </div>
               </div>
             </div>,
             {
               title: `发现新版本[${newVersion}]`,
-              footer: [<Button key="ok" onClick={onOk} type="primary">知道了</Button>],
+              footer: [
+                <Button key='ok' onClick={onOk} type='primary'>
+                  知道了
+                </Button>,
+              ],
               onCancel: () => {
                 newData.forceUpdate && app.exit();
               },
@@ -114,11 +131,15 @@ export default class Home extends React.Component{
     });
   }
   /* eslint-disable */
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.dom.onkeydown = null;
   }
-  componentDidCatch(){
-    Modal.error({title: '项目数据出错', message: '当前打开的项目不是PDMan的项目格式', width: 300});
+  componentDidCatch() {
+    Modal.error({
+      title: '项目数据出错',
+      message: '当前打开的项目不是PDMan的项目格式',
+      width: 300,
+    });
     this.setState({
       error: true,
     });
@@ -147,32 +168,37 @@ export default class Home extends React.Component{
       fileExistPromise(`${this.projectName}.pdman.json`, true, {
         modules: [],
         dataTypeDomains: defaultData.profile.defaultDataTypeDomains,
-      }).then((res) => {
-        // 保存的用户配置
-        const { histories } = this.state;
-        const temp = [...histories];
-        if (!temp.includes(this.projectName)) {
-          temp.unshift(this.projectName);
-        }
-        this.setState({
-          histories: temp,
-        });
-        saveFilePromise({
-          histories: temp,
-        }, this.historyPath).then(() => {
+      })
+        .then((res) => {
+          // 保存的用户配置
+          const { histories } = this.state;
+          const temp = [...histories];
+          if (!temp.includes(this.projectName)) {
+            temp.unshift(this.projectName);
+          }
           this.setState({
-            dataSource: res,
-            flag: false,
-            project: this.projectName,
-            closeProject: false,
-            changeDataType: 'reset',
-            error: false,
-            projectDemo: '',
+            histories: temp,
           });
+          saveFilePromise(
+            {
+              histories: temp,
+            },
+            this.historyPath
+          ).then(() => {
+            this.setState({
+              dataSource: res,
+              flag: false,
+              project: this.projectName,
+              closeProject: false,
+              changeDataType: 'reset',
+              error: false,
+              projectDemo: '',
+            });
+          });
+        })
+        .catch((e) => {
+          dialog.showErrorBox('创建项目失败！', JSON.stringify(e));
         });
-      }).catch((e) => {
-        dialog.showErrorBox('创建项目失败！', JSON.stringify(e));
-      });
     }
   };
   _onChange = (value) => {
@@ -195,19 +221,25 @@ export default class Home extends React.Component{
     if (type === 'all') {
       temp = [];
     } else {
-      temp = temp.filter(h => h !== history.split('.pdman.json')[0]);
+      temp = temp.filter((h) => h !== history.split('.pdman.json')[0]);
     }
-    this.setState({
-      histories: temp,
-    }, () => {
-      // 保存最新的历史记录
-      saveFilePromise({
+    this.setState(
+      {
         histories: temp,
-      }, this.historyPath);
-    });
+      },
+      () => {
+        // 保存最新的历史记录
+        saveFilePromise(
+          {
+            histories: temp,
+          },
+          this.historyPath
+        );
+      }
+    );
   };
   _checkDatabase = (database = []) => {
-    if (!database.some(db => db.defaultDatabase)) {
+    if (!database.some((db) => db.defaultDatabase)) {
       return database.map((db, index) => {
         if (index === 0) {
           return {
@@ -222,36 +254,45 @@ export default class Home extends React.Component{
   };
   _readData = (path, callBack) => {
     if (fileExist(path)) {
-      readFilePromise(path).then((res) => {
-        // 过滤已经存在的历史记录
-        const project = path.split('.pdman.json')[0];
-        const temp = [...this.state.histories].filter(his => his !== project);
-        // 把当前的项目插入到第一条数据
-        temp.unshift(project);
-        callBack && callBack();
-        this.setState({
-          histories: temp,
-          flag: false,
-          dataSource: {
-            ...res,
-            dataTypeDomains: {
-              ...(res.dataTypeDomains || {}),
-              database: this._checkDatabase(_object.get(res, 'dataTypeDomains.database', [])),
+      readFilePromise(path)
+        .then((res) => {
+          // 过滤已经存在的历史记录
+          const project = path.split('.pdman.json')[0];
+          const temp = [...this.state.histories].filter(
+            (his) => his !== project
+          );
+          // 把当前的项目插入到第一条数据
+          temp.unshift(project);
+          callBack && callBack();
+          this.setState({
+            histories: temp,
+            flag: false,
+            dataSource: {
+              ...res,
+              dataTypeDomains: {
+                ...(res.dataTypeDomains || {}),
+                database: this._checkDatabase(
+                  _object.get(res, 'dataTypeDomains.database', [])
+                ),
+              },
             },
-          },
-          changeDataType: 'reset',
-          project: project,
-          error: false,
-          closeProject: false,
-          projectDemo: '',
+            changeDataType: 'reset',
+            project: project,
+            error: false,
+            closeProject: false,
+            projectDemo: '',
+          });
+          // 将其存储到历史记录中
+          saveFilePromise(
+            {
+              histories: temp,
+            },
+            this.historyPath
+          );
+        })
+        .catch((e) => {
+          dialog.showErrorBox('打开项目失败！', JSON.stringify(e));
         });
-        // 将其存储到历史记录中
-        saveFilePromise({
-          histories: temp,
-        }, this.historyPath);
-      }).catch((e) => {
-        dialog.showErrorBox('打开项目失败！', JSON.stringify(e));
-      });
     } else {
       dialog.showErrorBox('打开项目失败！', '该项目已经不存在了！');
       this._delete(null, path);
@@ -282,24 +323,25 @@ export default class Home extends React.Component{
       } else {
         extensions.push('pdman.json');
       }
-      dialog.showOpenDialog({
-        title: 'Open Project',
-        properties:['openFile'],
-        filters: [
-          { name: 'PDMan', extensions: extensions},
-        ],
-      }, (file) => {
-        if (file) {
-          this._readData(file[0], callBack);
+      dialog.showOpenDialog(
+        {
+          title: 'Open Project',
+          properties: ['openFile'],
+          filters: [{ name: 'PDMan', extensions: extensions }],
+        },
+        (file) => {
+          if (file) {
+            this._readData(file[0], callBack);
+          }
         }
-      });
+      );
     }
   };
   _saveProject = (path, data, cb, dataHistory, selectCb) => {
     // 保存项目
     const { project } = this.state;
     if (path && project) {
-      const tempData = {...data};
+      const tempData = { ...data };
       if (!tempData) {
         // 保存时增加数据为空提示，防止生成空文件
         Modal.error({
@@ -307,17 +349,22 @@ export default class Home extends React.Component{
           message: '保存失败，请重试！',
         });
       } else {
-        fileExistPromise(path, true, tempData).then(() => {
-          this.setState({
-            dataSource: tempData,
-            changeDataType: 'update',
-            dataHistory,
-          }, () => {
-            cb && cb();
+        fileExistPromise(path, true, tempData)
+          .then(() => {
+            this.setState(
+              {
+                dataSource: tempData,
+                changeDataType: 'update',
+                dataHistory,
+              },
+              () => {
+                cb && cb();
+              }
+            );
+          })
+          .catch(() => {
+            Message.error({ title: '保存失败' });
           });
-        }).catch(() => {
-          Message.error({title: '保存失败'});
-        });
       }
     } else {
       const extensions = [];
@@ -326,31 +373,38 @@ export default class Home extends React.Component{
       } else {
         extensions.push('pdman.json');
       }
-      dialog.showSaveDialog({
-        title: `${data ? 'Save as' : 'Create Project'}`,
-        filters: [
-          { name: 'PDMan', extensions: extensions },
-        ],
-      }, (file) => {
-        if (file) {
-          selectCb && selectCb();
-          fileExistPromise(file, true, data).then(() => {
-            this.setState({
-              dataSource: data || {
-                modules: [],
-                dataTypeDomains: defaultData.profile.defaultDataTypeDomains,
-              },
-              changeDataType: 'update',
-              dataHistory,
-              project: file.split('.pdman.json')[0],
-            }, () => {
-              cb && cb();
-            });
-          }).catch(() => {
-            Message.error({title: '保存失败'});
-          });
+      dialog.showSaveDialog(
+        {
+          title: `${data ? 'Save as' : 'Create Project'}`,
+          filters: [{ name: 'PDMan', extensions: extensions }],
+        },
+        (file) => {
+          if (file) {
+            selectCb && selectCb();
+            fileExistPromise(file, true, data)
+              .then(() => {
+                this.setState(
+                  {
+                    dataSource: data || {
+                      modules: [],
+                      dataTypeDomains:
+                        defaultData.profile.defaultDataTypeDomains,
+                    },
+                    changeDataType: 'update',
+                    dataHistory,
+                    project: file.split('.pdman.json')[0],
+                  },
+                  () => {
+                    cb && cb();
+                  }
+                );
+              })
+              .catch(() => {
+                Message.error({ title: '保存失败' });
+              });
+          }
         }
-      });
+      );
     }
   };
   _createClose = () => {
@@ -374,14 +428,14 @@ export default class Home extends React.Component{
   };
   _getAllTableData = (dataSource) => {
     return (dataSource.modules || []).reduce((a, b) => {
-      return a.concat((b.entities || []));
+      return a.concat(b.entities || []);
     }, []);
   };
   _saveProjectSome = (path, data, cb, dataHistory, type) => {
     // 保存部分数据
     const { dataSource } = this.state;
     const typeArray = type.split('/');
-    let tempDataSource = {...dataSource};
+    let tempDataSource = { ...dataSource };
     if (typeArray.length === 0) {
       // 修改模块
       tempDataSource = {
@@ -411,19 +465,25 @@ export default class Home extends React.Component{
         ...dataSource,
         modules: (dataSource.modules || []).map((module) => {
           if (module.name === typeArray[0]) {
-            const changeEntity = (module.entities || [])
-              .filter(entity => entity.title === typeArray[2])[0];
-            const tempNodes = this._updateTableName(_object.get(module, 'graphCanvas.nodes', []), dataHistory);
+            const changeEntity = (module.entities || []).filter(
+              (entity) => entity.title === typeArray[2]
+            )[0];
+            const tempNodes = this._updateTableName(
+              _object.get(module, 'graphCanvas.nodes', []),
+              dataHistory
+            );
             const graphCanvas = {
-                ...(module.graphCanvas || {}),
-                nodes: tempNodes,
-              };
-            const entities = changeEntity ? (module.entities || []).map((entity) => {
-              if (entity.title === typeArray[2]) {
-                return data;
-              }
-              return entity;
-            }) : (module.entities || []).concat(data);
+              ...(module.graphCanvas || {}),
+              nodes: tempNodes,
+            };
+            const entities = changeEntity
+              ? (module.entities || []).map((entity) => {
+                  if (entity.title === typeArray[2]) {
+                    return data;
+                  }
+                  return entity;
+                })
+              : (module.entities || []).concat(data);
             return {
               ...module,
               graphCanvas,
@@ -439,54 +499,62 @@ export default class Home extends React.Component{
       const oldData = this._getAllTableData(dataSource);
       tempDataSource = {
         ...tempDataSource,
-        modules: (tempDataSource.modules || []).map(m => {
+        modules: (tempDataSource.modules || []).map((m) => {
           const tempEdges = _object.get(m, 'graphCanvas.edges', []);
           const tempNodes = _object.get(m, 'graphCanvas.nodes', []);
           return {
             ...m,
             graphCanvas: {
               ...(m.graphCanvas || {}),
-              edges: this._updateEdges(tempNodes, oldData, newData, tempEdges)
-            }
-          }
-        })
-      }
+              edges: this._updateEdges(tempNodes, oldData, newData, tempEdges),
+            },
+          };
+        }),
+      };
     }
     this._saveProject(path, tempDataSource, cb, dataHistory);
   };
   _getAssociations = (data, entities = []) => {
     const edges = [...(data.edges || [])];
     const nodes = [...(data.nodes || [])];
-    const tempAssociations = edges.map((edge) => {
-      const sourceNode = nodes.filter(node => node.id === edge.source)[0];
-      const targetNode = nodes.filter(node => node.id === edge.target)[0];
-      const sourceEntity = sourceNode.title.split(':')[0];
-      const targetEntity = targetNode.title.split(':')[0];
-      const sourceEntityData = entities
-        .filter(entity => entity.title === sourceEntity)[0] || sourceNode;
-      const targetEntityData = entities
-        .filter(entity => entity.title === targetEntity)[0] || targetNode;
-      /*if (!sourceEntityData || !targetEntityData) {
+    const tempAssociations = edges
+      .map((edge) => {
+        const sourceNode = nodes.filter((node) => node.id === edge.source)[0];
+        const targetNode = nodes.filter((node) => node.id === edge.target)[0];
+        const sourceEntity = sourceNode.title.split(':')[0];
+        const targetEntity = targetNode.title.split(':')[0];
+        const sourceEntityData =
+          entities.filter((entity) => entity.title === sourceEntity)[0] ||
+          sourceNode;
+        const targetEntityData =
+          entities.filter((entity) => entity.title === targetEntity)[0] ||
+          targetNode;
+        /*if (!sourceEntityData || !targetEntityData) {
         //Modal.error({title: '操作失败', message: '该数据表不存在，请先双击编辑保存再操作！', width: 350});
         return null;
       }*/
-      const sourceFieldData = (sourceEntityData.fields || [])[parseInt(edge.sourceAnchor / 2, 10)];
-      const targetFieldData = (targetEntityData.fields || [])[parseInt(edge.targetAnchor / 2, 10)];
-      if (!sourceFieldData || !targetFieldData) {
-        return null;
-      }
-      return {
-        relation: edge.relation || '',
-        from: {
-          entity: sourceEntity,
-          field: sourceFieldData.name,
-        },
-        to: {
-          entity: targetEntity,
-          field: targetFieldData.name,
-        },
-      };
-    }).filter(association => !!association);
+        const sourceFieldData = (sourceEntityData.fields || [])[
+          parseInt(edge.sourceAnchor / 2, 10)
+        ];
+        const targetFieldData = (targetEntityData.fields || [])[
+          parseInt(edge.targetAnchor / 2, 10)
+        ];
+        if (!sourceFieldData || !targetFieldData) {
+          return null;
+        }
+        return {
+          relation: edge.relation || '',
+          from: {
+            entity: sourceEntity,
+            field: sourceFieldData.name,
+          },
+          to: {
+            entity: targetEntity,
+            field: targetFieldData.name,
+          },
+        };
+      })
+      .filter((association) => !!association);
     const tempAssociationsString = [];
     return tempAssociations.filter((association) => {
       const stringData = `${association.from.entity}/${association.to.field}
@@ -499,16 +567,21 @@ export default class Home extends React.Component{
     });
   };
   _getNodeData = (sourceId, targetId, data, nodes) => {
-    const tempNodes =  nodes.map(n => {
-      const table = data.filter(d => d.title === (n.copy || n.title.split(':')[0]))[0];
+    const tempNodes = nodes.map((n) => {
+      const table = data.filter(
+        (d) => d.title === (n.copy || n.title.split(':')[0])
+      )[0];
       return {
         ...n,
         title: (table && table.title) || n.title,
-        fields: ((table && table.fields) || []).filter(f => !f.relationNoShow),
+        fields: ((table && table.fields) || []).filter(
+          (f) => !f.relationNoShow
+        ),
       };
     });
-    let sourceNode, targetNode = null;
-    for (let i = 0; i < tempNodes.length; i ++){
+    let sourceNode,
+      targetNode = null;
+    for (let i = 0; i < tempNodes.length; i++) {
       if (tempNodes[i].id === sourceId) {
         sourceNode = tempNodes[i];
       } else if (tempNodes[i].id === targetId) {
@@ -517,37 +590,61 @@ export default class Home extends React.Component{
     }
     return {
       sourceNode,
-      targetNode
-    }
+      targetNode,
+    };
   };
   _updateEdges = (nodes = [], oldData = [], data = [], edges = []) => {
     // 1.过滤掉属性不存在的连接线
-    return edges.map((e) => {
-      const sourceId = e.source;
-      const targetId = e.target;
-      const { sourceNode, targetNode } = this._getNodeData(sourceId, targetId, oldData, nodes);
-      const sourceIndex = parseInt(e.sourceAnchor / 2, 10);
-      const sourceField = sourceNode && sourceNode.fields[sourceIndex];
-      const targetIndex = parseInt(e.targetAnchor / 2, 10);
-      const targetField = targetNode && targetNode.fields[targetIndex];
-      const newSourceNode = data.filter(d => d.title === (sourceNode && sourceNode.title))[0];
-      const newTargetNode = data.filter(d => d.title === (targetNode && targetNode.title))[0];
-      const newSourceIndex = (newSourceNode && newSourceNode.fields || []).filter(f => !f.relationNoShow)
-        .findIndex(f => f.name === (sourceField && sourceField.name));
-      const newTargetIndex = (newTargetNode && newTargetNode.fields || []).filter(f => !f.relationNoShow)
-        .findIndex(f => f.name === (targetField && targetField.name));
-      if (!sourceField || !targetField || (newSourceIndex < 0) || (newTargetIndex < 0)) {
-        // 属性不存在了则需要移除
-        return null;
-      } else {
-        // 更新坐标
-        return {
-          ...e,
-          sourceAnchor: sourceIndex === newSourceIndex ? e.sourceAnchor : newSourceIndex * 2,
-          targetAnchor: targetIndex === newTargetIndex ? e.targetAnchor : newTargetIndex * 2,
+    return edges
+      .map((e) => {
+        const sourceId = e.source;
+        const targetId = e.target;
+        const { sourceNode, targetNode } = this._getNodeData(
+          sourceId,
+          targetId,
+          oldData,
+          nodes
+        );
+        const sourceIndex = parseInt(e.sourceAnchor / 2, 10);
+        const sourceField = sourceNode && sourceNode.fields[sourceIndex];
+        const targetIndex = parseInt(e.targetAnchor / 2, 10);
+        const targetField = targetNode && targetNode.fields[targetIndex];
+        const newSourceNode = data.filter(
+          (d) => d.title === (sourceNode && sourceNode.title)
+        )[0];
+        const newTargetNode = data.filter(
+          (d) => d.title === (targetNode && targetNode.title)
+        )[0];
+        const newSourceIndex = ((newSourceNode && newSourceNode.fields) || [])
+          .filter((f) => !f.relationNoShow)
+          .findIndex((f) => f.name === (sourceField && sourceField.name));
+        const newTargetIndex = ((newTargetNode && newTargetNode.fields) || [])
+          .filter((f) => !f.relationNoShow)
+          .findIndex((f) => f.name === (targetField && targetField.name));
+        if (
+          !sourceField ||
+          !targetField ||
+          newSourceIndex < 0 ||
+          newTargetIndex < 0
+        ) {
+          // 属性不存在了则需要移除
+          return null;
+        } else {
+          // 更新坐标
+          return {
+            ...e,
+            sourceAnchor:
+              sourceIndex === newSourceIndex
+                ? e.sourceAnchor
+                : newSourceIndex * 2,
+            targetAnchor:
+              targetIndex === newTargetIndex
+                ? e.targetAnchor
+                : newTargetIndex * 2,
+          };
         }
-      }
-    }).filter(e => !!e);
+      })
+      .filter((e) => !!e);
   };
   _updateTableName = (data = [], dataHistory = {}) => {
     // 将旧表名，替换到新表名
@@ -556,81 +653,104 @@ export default class Home extends React.Component{
       if (dataHistory.oldName === titleArray[0]) {
         return {
           ...node,
-          title: `${dataHistory.newName}${titleArray[1] ? `:${titleArray[1]}` : ''}`,
+          title: `${dataHistory.newName}${
+            titleArray[1] ? `:${titleArray[1]}` : ''
+          }`,
         };
       }
       return node;
     });
   };
   _openDir = (callBack) => {
-    dialog.showOpenDialog({
-      title: 'Open Directory',
-      properties:['openDirectory'],
-    }, (file) => {
-      if (file) {
-        callBack && callBack(file[0]);
+    dialog.showOpenDialog(
+      {
+        title: 'Open Directory',
+        properties: ['openDirectory'],
+      },
+      (file) => {
+        if (file) {
+          callBack && callBack(file[0]);
+        }
       }
-    });
+    );
   };
   _openDev = () => {
     ipcRenderer.sendSync('headerType', 'openDev');
   };
   _cloneProject = () => {
-    Message.warning({title: '该功能正在开发中，敬请期待！'});
+    Message.warning({ title: '该功能正在开发中，敬请期待！' });
   };
   render() {
     if (this.state.flag || this.state.error || this.state.closeProject) {
       const { histories, project, display } = this.state;
       const version = getCurrentVersion();
       return (
-        <div tabIndex="0" className='pdman-home-content' ref={instance => this.instance = instance}>
-          <Header project={project} disableMaximize/>
+        <div
+          tabIndex='0'
+          className='pdman-home-content'
+          ref={(instance) => (this.instance = instance)}
+        >
+          <Header project={project} disableMaximize />
           <div className='pdman-home'>
             <div
               className='pdman-home-left'
-              style={{display: display === 'none' ? '' : 'none'}}
+              style={{ display: display === 'none' ? '' : 'none' }}
             >
               <span className='pdman-home-left-list-name'>最近使用</span>
               <div className='pdman-home-left-list'>
-                {
-                  (histories || []).map(item => (
-                    <div className='pdman-home-left-list-item' key={item} onClick={() => this._openProject(item)}>
-                      <div className='pdman-home-left-list-item-name'>{this._getProjectName(item)}</div>
-                      <div className='pdman-home-left-list-item-icon'>
-                        <Icon type='close' onClick={e => this._delete(e, item)}/>
-                      </div>
-                      <div className='pdman-home-left-list-item-path'>{item}</div>
+                {(histories || []).map((item) => (
+                  <div
+                    className='pdman-home-left-list-item'
+                    key={item}
+                    onClick={() => this._openProject(item)}
+                  >
+                    <div className='pdman-home-left-list-item-name'>
+                      {this._getProjectName(item)}
                     </div>
-                  ))
-                }
+                    <div className='pdman-home-left-list-item-icon'>
+                      <Icon
+                        type='close'
+                        onClick={(e) => this._delete(e, item)}
+                      />
+                    </div>
+                    <div className='pdman-home-left-list-item-path'>{item}</div>
+                  </div>
+                ))}
               </div>
               <div className='pdman-home-left-demo'>
                 <span className='pdman-home-left-demo-name'>参考案例</span>
                 <div
                   className='pdman-home-left-list-item pdman-home-left-demo-item'
-                  onClick={() => this._openProject('standard', undefined, 'demo')}
+                  onClick={() =>
+                    this._openProject('standard', undefined, 'demo')
+                  }
                 >
-                  <Icon type='fa-briefcase' style={{marginRight: 5}}/>
+                  <Icon type='fa-briefcase' style={{ marginRight: 5 }} />
                   学生信息管理系统
                 </div>
               </div>
             </div>
-            <div className='pdman-home-right' style={{display: display === 'none' ? '' : 'none'}}>
+            <div
+              className='pdman-home-right'
+              style={{ display: display === 'none' ? '' : 'none' }}
+            >
               <div className='pdman-home-right-logo'>
                 <div className='pdman-home-right-logo-img'>{}</div>
                 {/*<Icon type='roic-pdman' style={{fontSize: '50px', color: '#3091E3'}}/>*/}
                 <div className='pdman-home-right-logo-title'>
                   <div className='pdman-home-right-logo-title-main'>PDMan</div>
-                  <div className='pdman-home-right-logo-title-second'>Version {version.version} {version.date}</div>
+                  <div className='pdman-home-right-logo-title-second'>
+                    Version {version.version} {version.date}
+                  </div>
                 </div>
               </div>
               <div className='pdman-home-right-opts'>
                 <div className='pdman-home-right-opts-icons'>
                   <div className='pdman-home-right-opts-icons-icon'>
-                    <div className='pdman-home-right-opts-icons-icon1'/>
+                    <div className='pdman-home-right-opts-icons-icon1' />
                   </div>
                   <div className='pdman-home-right-opts-icons-icon'>
-                    <div className='pdman-home-right-opts-icons-icon2'/>
+                    <div className='pdman-home-right-opts-icons-icon2' />
                   </div>
                 </div>
                 <div className='pdman-home-right-opts-names'>
@@ -649,7 +769,9 @@ export default class Home extends React.Component{
                 </div>
               </div>
               <div className='pdman-home-right-footer'>
-                <span onClick={() => this._openUrl('http://www.pdman.cn')}>官方网站</span>
+                <span onClick={() => this._openUrl('http://www.pdman.cn')}>
+                  官方网站
+                </span>
                 {/*<div className='pdman-home-right-footer-config' onClick={this._openDev}>
                   <Icon type='setting'/><span>调试</span>
                 </div>*/}
@@ -660,7 +782,7 @@ export default class Home extends React.Component{
             <CreatePro
               close={this._createClose}
               onChange={this._onChange}
-              style={{display: this.state.display, width: '100%'}}
+              style={{ display: this.state.display, width: '100%' }}
               onOk={this._onOk}
             />
           </div>
@@ -669,11 +791,20 @@ export default class Home extends React.Component{
     }
     ipcRenderer.sendSync('loadingSuccess');
     return (
-      <div style={{width: '100%', height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column'}}>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
         <Header
           project={this.state.project}
           projectDemo={this.state.projectDemo}
-          disableMaximize={!this.state.projectDemo && !this.state.project}/>
+          disableMaximize={!this.state.projectDemo && !this.state.project}
+        />
         <App
           changeDataType={this.state.changeDataType}
           dataSource={this.state.dataSource}
@@ -691,7 +822,7 @@ export default class Home extends React.Component{
           register={this.state.register}
           updateRegister={this._updateRegister}
         />
-      </div>);
+      </div>
+    );
   }
 }
-

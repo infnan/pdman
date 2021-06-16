@@ -9,8 +9,8 @@ import 'brace/ext/searchbox';
 
 import { uuid } from '../../utils/uuid';
 
-export default class Editor extends React.Component{
-  constructor(props){
+export default class Editor extends React.Component {
+  constructor(props) {
     super(props);
     this.state = {
       name: uuid(),
@@ -23,11 +23,12 @@ export default class Editor extends React.Component{
   };
   _onChange = (value) => {
     const { onChange } = this.props;
-    onChange && onChange({
-      target: {
-        value,
-      },
-    });
+    onChange &&
+      onChange({
+        target: {
+          value,
+        },
+      });
   };
   _onKeyDown = (e) => {
     if (e.keyCode === 13) {
@@ -36,7 +37,13 @@ export default class Editor extends React.Component{
   };
   render() {
     const { name } = this.state;
-    const { mode = 'mysql', theme = 'monokai', value, height, width } = this.props;
+    const {
+      mode = 'mysql',
+      theme = 'monokai',
+      value,
+      height,
+      width,
+    } = this.props;
     return (
       <div onKeyDown={this._onKeyDown}>
         <AceEditor

@@ -13,9 +13,9 @@ const main = '主键';
 const remark = '备注';
 
 const getFieldType = (datatype, type, code) => {
-  const data = (datatype || []).filter(dt => dt.code === type)[0];
+  const data = (datatype || []).filter((dt) => dt.code === type)[0];
   if (data) {
-    return _object.get(data, `apply.${code}.type`,'');
+    return _object.get(data, `apply.${code}.type`, '');
   }
   return type;
 };
@@ -25,13 +25,23 @@ const generateHeader = (dataSource) => {
   const modules = _object.get(dataSource, 'modules', []);
   modules.forEach((module, index) => {
     const entities = module.entities || [];
-    moduleString += `<li class="first-li"><a class="module" id="module-${module.name}-from" href="#module-${module.name}-to">${index + 1} ${module.chnname || module.name}</a>\n`;
+    moduleString += `<li class="first-li"><a class="module" id="module-${
+      module.name
+    }-from" href="#module-${module.name}-to">${index + 1} ${
+      module.chnname || module.name
+    }</a>\n`;
     moduleString += `<ul><li class="second-li"><a class="module-list" id="module-${module.name}-relation-from" href="#module-${module.name}-relation-to">1 ${relation}</a></li>\n`;
     moduleString += `<li class="second-li"><a class="module-list" id="module-${module.name}-tableList-from" href="#module-${module.name}-tableList-to">2 ${tableList}</a></li>\n`;
     moduleString += `<li class="second-li"><a class="module-list" id="module-${module.name}-tableColumnList-from" href="#module-${module.name}-tableColumnList-to">3 ${tableColumnList}</a>\n`;
     moduleString += `<ul>`;
     entities.forEach((entity, entityIndex) => {
-      moduleString += `<li class="third-li"><a id="module-${module.name}-tableColumnList-${entity.title}-from" href="#module-${module.name}-tableColumnList-${entity.title}-to">3.${entityIndex + 1} ${entity.title}【${entity.chnname || ''}】</a></li>\n`
+      moduleString += `<li class="third-li"><a id="module-${
+        module.name
+      }-tableColumnList-${entity.title}-from" href="#module-${
+        module.name
+      }-tableColumnList-${entity.title}-to">3.${entityIndex + 1} ${
+        entity.title
+      }【${entity.chnname || ''}】</a></li>\n`;
     });
     moduleString += `</ul></li></ul></li>`;
   });
@@ -51,8 +61,10 @@ const generateTableListTable = (dataSource, moduleName) => {
     if (module.name === moduleName) {
       const entities = module.entities || [];
       entities.forEach((entity) => {
-        tableString += `<tr><td>${entity.chnname || ''}</td><td>${entity.title}</td><td>${entity.remark || ''}</td></tr>\n`;
-      })
+        tableString += `<tr><td>${entity.chnname || ''}</td><td>${
+          entity.title
+        }</td><td>${entity.remark || ''}</td></tr>\n`;
+      });
     }
   });
   return `${tableString}</table>`;
@@ -65,8 +77,13 @@ const generateTableColumnListTable = (dataSource, moduleName, tableName) => {
   | 用户信息  | userManage  |
    */
   const datatypes = _object.get(dataSource, 'dataTypeDomains.datatype', []);
-  const databases = _object.get(dataSource, 'dataTypeDomains.database', []).filter(database => database.fileShow);
-  const databaseColumn = databases.length !== 0 && `(${databases.map(data => data.code).join('/')})` || '';
+  const databases = _object
+    .get(dataSource, 'dataTypeDomains.database', [])
+    .filter((database) => database.fileShow);
+  const databaseColumn =
+    (databases.length !== 0 &&
+      `(${databases.map((data) => data.code).join('/')})`) ||
+    '';
   let tableString = `<table border="1" cellspacing="0">\n`;
   tableString += `<tr class="first-tr"><td>${code}</td><td>${name}</td><td>${dataType}${databaseColumn}</td><td>${main}</td><td>${remark}</td></tr>\n`;
   const modules = _object.get(dataSource, 'modules', []);
@@ -79,13 +96,21 @@ const generateTableColumnListTable = (dataSource, moduleName, tableName) => {
           (entity.fields || []).forEach((field) => {
             // 获取每一个属性对应的每一个数据的数据类型
             const fieldTypes = [];
-            databases.forEach(database => {
-              fieldTypes.push(getFieldType(datatypes, field.type, database.code))
+            databases.forEach((database) => {
+              fieldTypes.push(
+                getFieldType(datatypes, field.type, database.code)
+              );
             });
-            tableString += `<tr><td>${field.name}</td><td>${field.chnname || ''}</td><td>${fieldTypes.length !== 0 && fieldTypes.join('/') || ''}</td><td>${field.pk && '√' || ''}</td><td>${field.remark || ''}</td></tr>\n`;
+            tableString += `<tr><td>${field.name}</td><td>${
+              field.chnname || ''
+            }</td><td>${
+              (fieldTypes.length !== 0 && fieldTypes.join('/')) || ''
+            }</td><td>${(field.pk && '√') || ''}</td><td>${
+              field.remark || ''
+            }</td></tr>\n`;
           });
         }
-      })
+      });
     }
   });
   return `${tableString}</table>`;
@@ -134,29 +159,55 @@ const generateModuleBody = (dataSource, images = {}, projectName) => {
   // 生成关系图
   // 生成该模块的表清单
   modules.forEach((module, index) => {
-    modulesString += `<li class="first-li"><a class="module" id="module-${module.name}-to" href="#module-${module.name}-from">${index + 1} ${module.chnname || module.name}</a><ul>\n`;
-    modulesString += `<li class="second-li"><a class="module-list" class="block" id="module-${module.name}-relation-to" href="#module-${module.name}-relation-from">${index + 1}.1 ${relation}</a>\n`;
+    modulesString += `<li class="first-li"><a class="module" id="module-${
+      module.name
+    }-to" href="#module-${module.name}-from">${index + 1} ${
+      module.chnname || module.name
+    }</a><ul>\n`;
+    modulesString += `<li class="second-li"><a class="module-list" class="block" id="module-${
+      module.name
+    }-relation-to" href="#module-${module.name}-relation-from">${
+      index + 1
+    }.1 ${relation}</a>\n`;
     modulesString += `${generateRelation(module.name, images, projectName)}\n`;
     modulesString += `</li><hr>\n`;
     // 表清单
-    modulesString += `<li><a class="module-list" id="module-${module.name}-tableList-to" href="module-${module.name}-tableList-from">${index + 1}.2  ${tableList}</a>\n\n`;
+    modulesString += `<li><a class="module-list" id="module-${
+      module.name
+    }-tableList-to" href="module-${module.name}-tableList-from">${
+      index + 1
+    }.2  ${tableList}</a>\n\n`;
 
     modulesString += `\n\n`;
     modulesString += `${generateTableListTable(dataSource, module.name)}\n`;
     modulesString += `</li><hr>\n\n`;
     // 列清单
     // 循环所有的表
-    modulesString += `<li><a class="module-list" id="module-${module.name}-tableColumnList-to" href="module-${module.name}-tableColumnList-from">${index + 1}.3 ${tableColumnList}</a>\n\n`;
+    modulesString += `<li><a class="module-list" id="module-${
+      module.name
+    }-tableColumnList-to" href="module-${module.name}-tableColumnList-from">${
+      index + 1
+    }.3 ${tableColumnList}</a>\n\n`;
     const entities = module.entities || [];
     modulesString += `<ul style="padding: 0">`;
     entities.forEach((entity, entityIndex) => {
       //modulesString += `<span id="module-${module.name}-tableColumnList-${entity.title}">\n`;
-      modulesString += ` <li><a class="block" id="module-${module.name}-tableColumnList-${entity.title}-to" href="module-${module.name}-tableColumnList-${entity.title}-from">${index + 1}.3.${entityIndex + 1} ${entity.title}【${entity.chnname || ''}】</a>\n\n`;
+      modulesString += ` <li><a class="block" id="module-${
+        module.name
+      }-tableColumnList-${entity.title}-to" href="module-${
+        module.name
+      }-tableColumnList-${entity.title}-from">${index + 1}.3.${
+        entityIndex + 1
+      } ${entity.title}【${entity.chnname || ''}】</a>\n\n`;
       //modulesString += `</span>\n\n`;
-      modulesString += `${generateTableColumnListTable(dataSource, module.name, entity.title)}\n`;
+      modulesString += `${generateTableColumnListTable(
+        dataSource,
+        module.name,
+        entity.title
+      )}\n`;
       modulesString += `</li>\n\n`;
     });
-    modulesString += '</ul></li></ul><hr></li>'
+    modulesString += '</ul></li></ul><hr></li>';
   });
   // 生成该模块的表列清单
   return `${modulesString}</ul>`;
@@ -231,7 +282,7 @@ export const generateHtml = (dataSource, images, projectName, callBack) => {
   const index = '<center class="index">目录</center>\n';
   const header = generateHeader(dataSource);
   const body = generateModuleBody(dataSource, images, projectName);
-  const endTag = "</body>\n" +
-    "</html>";
-  callBack && callBack(`${defaultData}${index}<hr>${header}<hr>${body}${endTag}`);
+  const endTag = '</body>\n' + '</html>';
+  callBack &&
+    callBack(`${defaultData}${index}<hr>${header}<hr>${body}${endTag}`);
 };

@@ -4,8 +4,8 @@ import './style/index.less';
 
 import { Icon, Checkbox } from '../index';
 
-export default class TreeSelect extends React.Component{
-  constructor(props){
+export default class TreeSelect extends React.Component {
+  constructor(props) {
     super(props);
     this.state = {
       openKeys: [],
@@ -14,7 +14,7 @@ export default class TreeSelect extends React.Component{
     };
   }
   componentWillReceiveProps(nextProps) {
-    if (this.props.data !== nextProps.data){
+    if (this.props.data !== nextProps.data) {
       this.setState({
         allKeys: this._initAllKeys(nextProps.data),
       });
@@ -24,9 +24,16 @@ export default class TreeSelect extends React.Component{
     return this.state.checkeds;
   };
   _initAllKeys = (data) => {
-    return (data || []).reduce((a, b) => {
-      return (a.concat(b.entities.map(c => ({...c, key: `${b.name}/${c.title}`}))));
-    }, (data || []).map(d => ({ key: d.name }))).map(k => k.key);
+    return (data || [])
+      .reduce(
+        (a, b) => {
+          return a.concat(
+            b.entities.map(c => ({ ...c, key: `${b.name}/${c.title}` })),
+          );
+        },
+        (data || []).map(d => ({ key: d.name })),
+      )
+      .map(k => k.key);
   };
   _onChange = (e, key) => {
     const { checkeds, allKeys } = this.state;
@@ -42,7 +49,9 @@ export default class TreeSelect extends React.Component{
         // 判断该节点下所有的key是否都被选中
         // 如果全部选中，则父节点选中
         const parentKey = key.split('/')[0];
-        const allChildrenKey = allKeys.filter(k => k.split('/')[0] === parentKey && k !== parentKey);
+        const allChildrenKey = allKeys.filter(
+          k => k.split('/')[0] === parentKey && k !== parentKey,
+        );
         if (allChildrenKey.every(c => tempCheckeds.includes(c))) {
           tempCheckeds.push(parentKey);
         }
@@ -56,12 +65,15 @@ export default class TreeSelect extends React.Component{
         tempCheckeds = tempCheckeds.filter(c => c !== key.split('/')[0]);
       }
     }
-    this.setState({
-      checkeds: [...new Set(tempCheckeds)],
-    }, () => {
-      const { onChange } = this.props;
-      onChange && onChange(this.state.checkeds);
-    });
+    this.setState(
+      {
+        checkeds: [...new Set(tempCheckeds)],
+      },
+      () => {
+        const { onChange } = this.props;
+        onChange && onChange(this.state.checkeds);
+      },
+    );
   };
   _iconClick = (key) => {
     const { openKeys } = this.state;
@@ -78,49 +90,61 @@ export default class TreeSelect extends React.Component{
   render() {
     const { data, titleRender } = this.props;
     const { openKeys, checkeds } = this.state;
-    return (<div className='pdman-treeselect'>
-      {
-        data.map((d) => {
+    return (
+      <div className='pdman-treeselect'>
+        {data.map((d) => {
           return (
             <div className='pdman-treeselect-item' key={d.name}>
               <div className='pdman-treeselect-item-name'>
                 <Icon
-                  type="right"
+                  type='right'
                   onClick={() => this._iconClick(d.name)}
                   style={{
-                    transform: openKeys.includes(d.name) ? 'rotate(90deg)' : 'rotate(0deg)',
+                    transform: openKeys.includes(d.name)
+                      ? 'rotate(90deg)'
+                      : 'rotate(0deg)',
                   }}
                 />
                 <Checkbox
                   value={checkeds.includes(d.name)}
                   onChange={e => this._onChange(e, d.name)}
-                  wrapperStyle={{width: 20}}
+                  wrapperStyle={{ width: 20 }}
                 />
                 <span>{d.name}</span>
               </div>
               <div
                 className='pdman-treeselect-item-children'
-                style={{display: openKeys.includes(d.name) ? '' : 'none'}}
+                style={{ display: openKeys.includes(d.name) ? '' : 'none' }}
               >
-                {
-                  (d.entities || []).map((c) => {
-                    return (
-                      <div className='pdman-treeselect-item-children-item' key={c.title}>
-                        <Checkbox
-                          value={checkeds.includes(d.name) || checkeds.includes(`${d.name}/${c.title}`)}
-                          onChange={e => this._onChange(e, `${d.name}/${c.title}`)}
-                          wrapperStyle={{width: 20}}
-                        />
-                        <span>{ titleRender ? titleRender(c) : `${c.chnname || c.title}(${c.title})`}</span>
-                      </div>
-                    );
-                  })
-                }
+                {(d.entities || []).map((c) => {
+                  return (
+                    <div
+                      className='pdman-treeselect-item-children-item'
+                      key={c.title}
+                    >
+                      <Checkbox
+                        value={
+                          checkeds.includes(d.name) ||
+                          checkeds.includes(`${d.name}/${c.title}`)
+                        }
+                        onChange={e =>
+                          this._onChange(e, `${d.name}/${c.title}`)
+                        }
+                        wrapperStyle={{ width: 20 }}
+                      />
+                      <span>
+                        {titleRender
+                          ? titleRender(c)
+                          : `${c.chnname || c.title}(${c.title})`}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );
-        })
-      }
-    </div>);
+        })}
+      </div>
+    );
   }
 }

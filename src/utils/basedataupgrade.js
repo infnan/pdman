@@ -12,9 +12,17 @@ const upgradeVersionTo2 = (dataSource, cb) => {
   // 新增 deleteIndexTemplate
   // 新增 createIndexTemplate
   // 新增 updateTableComment
-  const newTemplate = ['createTableTemplate', 'deleteTableTemplate', 'rebuildTableTemplate',
-    'createFieldTemplate', 'updateFieldTemplate', 'deleteFieldTemplate',
-    'deleteIndexTemplate', 'createIndexTemplate', 'updateTableComment'];
+  const newTemplate = [
+    'createTableTemplate',
+    'deleteTableTemplate',
+    'rebuildTableTemplate',
+    'createFieldTemplate',
+    'updateFieldTemplate',
+    'deleteFieldTemplate',
+    'deleteIndexTemplate',
+    'createIndexTemplate',
+    'updateTableComment',
+  ];
   const dbs = _object.get(dataSource, 'dataTypeDomains.database', []);
   let flag = false;
   let tempDataSource = {
@@ -22,10 +30,16 @@ const upgradeVersionTo2 = (dataSource, cb) => {
     dataTypeDomains: {
       ...(dataSource.dataTypeDomains || {}),
       database: dbs.map((db) => {
-        const tempDB = {...db};
-        const currentDBs = _object.get(defaultData, 'profile.defaultDataTypeDomains.database', []);
-        const currentDB = currentDBs
-          .filter(cdb => cdb.code.toLocaleLowerCase() === tempDB.code.toLocaleLowerCase())[0];
+        const tempDB = { ...db };
+        const currentDBs = _object.get(
+          defaultData,
+          'profile.defaultDataTypeDomains.database',
+          [],
+        );
+        const currentDB = currentDBs.filter(
+          cdb =>
+            cdb.code.toLocaleLowerCase() === tempDB.code.toLocaleLowerCase(),
+        )[0];
         if (currentDB) {
           newTemplate.forEach((t) => {
             // 如果该模板未定义，只使用默认模板。其他情况无需更新此模板
@@ -65,7 +79,6 @@ const upgradeVersionTo2 = (dataSource, cb) => {
     }),
   };
 
-
   // 更新结束
   cb && cb(tempDataSource, flag);
 };
@@ -76,4 +89,3 @@ export const upgrade = (dataSource, cb) => {
   upgradeVersionTo2(dataSource, cb);
   // ...
 };
-

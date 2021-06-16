@@ -52,17 +52,16 @@ export const removeOnKeyDown = (tabId) => {
 };
 
 export const removeEventListener = (node, fucName, fuc) => {
-  if(node.attachEvent){
+  if (node.attachEvent) {
     node.detachEvent(`on${fucName}`, fuc);
-  }else{
+  } else {
     node.removeEventListener(fucName, fuc, false);
   }
 };
 export const addEventListener = (node, fucName, fuc) => {
-  if(node.attachEvent){
+  if (node.attachEvent) {
     node.attachEvent(`on${fucName}`, fuc);
-  }else{
+  } else {
     node.addEventListener(fucName, fuc, false);
   }
 };
-

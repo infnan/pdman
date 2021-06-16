@@ -12,7 +12,7 @@ const getProject = (project, type, split) => {
 
 const getAllTable = (dataSource) => {
   return (dataSource.modules || []).reduce((a, b) => {
-    return a.concat((b.entities || []));
+    return a.concat(b.entities || []);
   }, []);
 };
 
@@ -82,14 +82,26 @@ const compareIndexs = (currentTable, checkTable) => {
         opt: 'add',
       });
     } else {
-      const checkIndex = checkIndexs.filter(c => c.name === cIndex.name)[0] || {};
-      changes.push(...compareIndex(_object.omit(cIndex, ['fields']),
-        _object.omit(checkIndex, ['fields']), currentTable));
+      const checkIndex =
+        checkIndexs.filter(c => c.name === cIndex.name)[0] || {};
+      changes.push(
+        ...compareIndex(
+          _object.omit(cIndex, ['fields']),
+          _object.omit(checkIndex, ['fields']),
+          currentTable,
+        ),
+      );
       // 比较索引中的属性
       const checkFields = checkIndex.fields || [];
       const currentFields = cIndex.fields || [];
-      changes.push(...compareStringArray(
-        currentFields, checkFields, currentTable.title, cIndex.name));
+      changes.push(
+        ...compareStringArray(
+          currentFields,
+          checkFields,
+          currentTable.title,
+          cIndex.name,
+        ),
+      );
     }
   });
   checkIndexs.forEach((cIndex) => {
@@ -131,7 +143,8 @@ export const checkVersionData = (dataSource1, dataSource2) => {
     // 1.1 判断该表是否存在
     if (checkTableNames.includes(table.title)) {
       // 1.2.1 如果该表存在则需要对比字段
-      const checkTable = checkTables.filter(t => t.title === table.title)[0] || {};
+      const checkTable =
+        checkTables.filter(t => t.title === table.title)[0] || {};
       // 将两个表的所有的属性循环比较
       const checkFields = (checkTable.fields || []).filter(f => f.name);
       const tableFields = (table.fields || []).filter(f => f.name);
@@ -146,7 +159,8 @@ export const checkVersionData = (dataSource1, dataSource2) => {
           });
         } else {
           // 比较属性的详细信息
-          const checkField = checkFields.filter(f => f.name === field.name)[0] || {};
+          const checkField =
+            checkFields.filter(f => f.name === field.name)[0] || {};
           const result = compareField(field, checkField, table);
           changes.push(...result);
         }
@@ -161,8 +175,10 @@ export const checkVersionData = (dataSource1, dataSource2) => {
         }
       });
       // 1.2.2 其他信息
-      const entityResult = compareEntity(_object.omit(table, ['fields', 'indexs', 'headers']),
-        _object.omit(checkTable, ['fields', 'indexs']));
+      const entityResult = compareEntity(
+        _object.omit(table, ['fields', 'indexs', 'headers']),
+        _object.omit(checkTable, ['fields', 'indexs']),
+      );
       changes.push(...entityResult);
       // 1.2.3 对比索引
       const result = compareIndexs(table, checkTable);
@@ -199,23 +215,25 @@ export const getCurrentVersionData = (dataSource, project, split, cb) => {
   const proPath = getProject(project, 'path', split);
   const basePathDir = `${proPath}${split}.${proName}.version${split}`;
   getDirListPromise(basePathDir).then((res) => {
-    const versions = res.map((r) => {
-      const file = r.split('-')[1];
-      if (file) {
-        const v = file.split('.pdman.json')[0];
-        if (v && v !== 'base') {
-          return v;
+    const versions = res
+      .map((r) => {
+        const file = r.split('-')[1];
+        if (file) {
+          const v = file.split('.pdman.json')[0];
+          if (v && v !== 'base') {
+            return v;
+          }
+          return null;
         }
         return null;
-      }
-      return null;
-    }).filter(v => !!v);
+      })
+      .filter(v => !!v);
     let checkVersion = 'base';
     if (versions.length > 0) {
       checkVersion = versions.sort((a, b) => a < b)[0];
     }
     // 读取当前版本的内容
-    const currentDataSource = {...dataSource};
+    const currentDataSource = { ...dataSource };
     // 组装需要比较的版本内容
     const name = getProject(project, 'name', split);
     const checkPath = `${basePathDir}${name}-${checkVersion}.pdman.json`;
@@ -226,4 +244,3 @@ export const getCurrentVersionData = (dataSource, project, split, cb) => {
     });
   });
 };
-

@@ -4,7 +4,6 @@ import React from 'react';
 import './style/index.less';
 
 class Index extends React.Component {
-
   _onBlur = (evt) => {
     evt.stopPropagation();
     const { onBlur } = this.props;
@@ -21,7 +20,13 @@ class Index extends React.Component {
     e.stopPropagation();
   };
   render() {
-    const { defaultValue, prefix = 'pdman', style, children, value } = this.props;
+    const {
+      defaultValue,
+      prefix = 'pdman',
+      style,
+      children,
+      value,
+    } = this.props;
     return (
       <select
         draggable
@@ -40,4 +45,3 @@ class Index extends React.Component {
 }
 
 export default Index;
-
